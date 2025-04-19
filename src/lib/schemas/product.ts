@@ -21,11 +21,11 @@ export type ShelfPosition = z.infer<typeof ShelfPositionSchema>
 
 // Main product form schema
 export const productFormSchema = z.object({
+    // Updated name validation with combined regex for characters and length
     name: z.string()
-        .min(2, "Product name must be at least 2 characters")
-        .max(255, "Product name is too long")
-        .regex(/^[\x20-\x7E]+$/, "Only basic characters are allowed"),
+        .regex(/^[\x20-\x7E]{2,32}$/, "Name must be 2-32 basic ASCII characters"),
 
+    // Updated price validation with strict regex for ESP limit
     price: z.number()
         .min(0, "Price must be positive")
         .max(9999.99, "Price cannot exceed 9999.99")

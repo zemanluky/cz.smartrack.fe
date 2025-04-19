@@ -44,6 +44,8 @@ function AddProductForm({ onSuccess }: { onSuccess: () => void }) {
     const addProduct = useProductStore((state) => state.addProduct)
     const [isSubmitting, setIsSubmitting] = useState(false)
     const [priceInput, setPriceInput] = useState("")
+    const [nameInput, setNameInput] = useState("")
+    const [nameError, setNameError] = useState("")
 
     // Fix for the resolver error - explicitly type it as any to bypass TypeScript's complex typing
     const form = useForm({
@@ -83,6 +85,8 @@ function AddProductForm({ onSuccess }: { onSuccess: () => void }) {
             // Reset form and string input
             form.reset();
             setPriceInput("");
+            setNameInput("");
+            setNameError("");
             onSuccess();
         } catch (error) {
             console.error("Error adding product:", error);
@@ -92,12 +96,13 @@ function AddProductForm({ onSuccess }: { onSuccess: () => void }) {
         }
     }
 
-    // Handle price input change
+    // Handle price input change with ESP limit (4 digits, exactly 2 decimal places)
     const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
 
-        // Only allow digits and at most one decimal point
-        if (/^(\d*\.?\d{0,2})?$/.test(value)) {
+
+        // Only allow up to 4 digits before decimal point, decimal point, and exactly 2 decimal places
+        if (/^(\d{0,4}\.?\d{0,2})$/.test(value)) {
             setPriceInput(value);
 
             // Update the form value if we have a valid number
@@ -107,6 +112,27 @@ function AddProductForm({ onSuccess }: { onSuccess: () => void }) {
                 form.setValue("price", parseFloat(value));
             }
         }
+    };
+
+    // Handle name input change with validation
+    const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setNameInput(value);
+
+        // Validate name - 2-32 basic ASCII characters
+        if (!/^[\x20-\x7F]{2,32}$/.test(value) && value.length > 0) {
+            if (value.length < 2) {
+                setNameError("Name must be at least 2 characters");
+            } else if (value.length > 32) {
+                setNameError("Name cannot exceed 32 characters");
+            } else {
+                setNameError("Only basic ASCII characters are allowed");
+            }
+        } else {
+            setNameError("");
+        }
+
+        form.setValue("name", value);
     };
 
     return (
@@ -193,7 +219,6 @@ function AddProductForm({ onSuccess }: { onSuccess: () => void }) {
                         />
                     </div>
                 ) : (
-                    // Use @ts-ignore to bypass the type checking for the NFCScanner
                     // @ts-ignore
                     <NFCScanner
                         setValue={form.setValue}
@@ -210,11 +235,18 @@ function AddProductForm({ onSuccess }: { onSuccess: () => void }) {
                         <FormItem>
                             <FormLabel>Name</FormLabel>
                             <FormControl>
-                                <Input placeholder="Product name" {...field} />
+                                <Input
+                                    placeholder="Product name"
+                                    value={nameInput}
+                                    onChange={handleNameChange}
+                                />
                             </FormControl>
                             <FormDescription>
-                                Use only basic ASCII characters
+                                2-32 basic ASCII characters
                             </FormDescription>
+                            {nameError && (
+                                <p className="text-sm text-red-500">{nameError}</p>
+                            )}
                             <FormMessage />
                         </FormItem>
                     )}

@@ -3,15 +3,32 @@ import { QrCode } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 
-// Using a simpler type definition to avoid TypeScript issues
+// Updated interface with boolean flag for isScanning instead of using any
 interface NFCScannerProps {
-    setValue: any // Using 'any' to bypass TypeScript's strict checking
+    setValue: any // Still using 'any' for setValue to bypass TypeScript issues
     currentRow: number
     currentColumn: number
+    isScanning?: boolean // Added boolean prop for scanning state
 }
 
-export function NFCScanner({ setValue, currentRow, currentColumn }: NFCScannerProps) {
-    const [isScanning, setIsScanning] = useState(false)
+export function NFCScanner({
+                               setValue,
+                               currentRow,
+                               currentColumn,
+                               isScanning: externalScanning
+                           }: NFCScannerProps) {
+    // Use internal state if external state is not provided
+    const [internalIsScanning, setInternalIsScanning] = useState(false)
+
+    // Use either external or internal scanning state
+    const isScanning = externalScanning !== undefined ? externalScanning : internalIsScanning
+
+    // Update internal state only if external state is not provided
+    const setIsScanning = (value: boolean) => {
+        if (externalScanning === undefined) {
+            setInternalIsScanning(value)
+        }
+    }
 
     // Handle NFC scanning
     const handleStartScan = () => {
