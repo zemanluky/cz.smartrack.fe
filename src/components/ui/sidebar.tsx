@@ -1,10 +1,9 @@
 import { useLocation, Link } from "react-router-dom";
-import { LayoutDashboard, Boxes, ClipboardList, BarChart } from "lucide-react";
+import { LayoutDashboard, Boxes, BarChart } from "lucide-react";
 
 const navItems = [
   { label: "Přehled", to: "/dashboard", icon: LayoutDashboard },
   { label: "Sklad", to: "/stock", icon: Boxes },
-  { label: "Inventura", to: "/inventory", icon: ClipboardList },
   { label: "Reporty", to: "/reports", icon: BarChart },
 ];
 
