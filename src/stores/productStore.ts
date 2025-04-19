@@ -70,6 +70,7 @@ const mockProducts: ProductWithPosition[] = [
 interface ProductStore {
     products: ProductWithPosition[]
     addProduct: (data: ProductFormValues) => void
+    updateProduct: (id: number, data: Partial<ProductWithPosition>) => void
     getProducts: () => ProductWithPosition[]
     deleteProduct: (id: number) => void
 }
@@ -104,6 +105,38 @@ export const useProductStore = create<ProductStore>((set, get) => ({
 
         set((state) => ({
             products: [...state.products, newProduct]
+        }));
+    },
+
+    updateProduct: (id, data) => {
+        // Find existing product
+        const existingProduct = get().products.find(product => product.id === id);
+
+        if (!existingProduct) {
+            console.error(`Product with id ${id} not found`);
+            return;
+        }
+
+        // Create updated product by merging changes
+        const updatedProduct: ProductWithPosition = {
+            ...existingProduct,
+            ...data,
+            // Handle nested position object if present in data
+            position: data.position ? {
+                ...existingProduct.position,
+                ...data.position
+            } : existingProduct.position
+        };
+
+        // Log the update operation
+        const logStore = useProductLogStore.getState();
+        logStore.addLog('update', updatedProduct, `Product details updated`);
+
+        // Update product in state
+        set((state) => ({
+            products: state.products.map(product =>
+                product.id === id ? updatedProduct : product
+            )
         }));
     },
 

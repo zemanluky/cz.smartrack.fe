@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/ui/layout";
 import StockPage from "@/app/stock/page";
+import ProductDetailPage from "@/app/stock/[productId]/page";
 import ReportsPage from "@/app/reports/page";
 
 const Placeholder = ({ title }: { title: string }) => (
@@ -14,8 +15,10 @@ export default function App() {
                 <Routes>
                     <Route path="/dashboard" element={<Placeholder title="Přehled" />} />
                     <Route path="/stock" element={<StockPage />} />
+                    <Route path="/stock/:productId" element={<ProductDetailPage />} />
                     <Route path="/inventory" element={<Placeholder title="Inventura" />} />
-                    <Route path="/reports" element={<ReportsPage />} /> {/* Updated to use the new ReportsPage */}
+                    <Route path="/reports" element={<ReportsPage />} />
+                    <Route path="*" element={<StockPage />} /> {/* Default route */}
                 </Routes>
             </Layout>
         </Router>
