@@ -1,34 +1,31 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { useProductStore } from "@/stores/productStore"
+import { mockProductService } from "@/lib/services/mockProductService"
 import { toast } from "sonner"
-import type { ProductWithPosition } from "@/lib/types/product"
+import type { Product } from "@/lib/types/product"
 
 interface DeleteFormProps {
-    product: ProductWithPosition
+    product: Product
     onCancel: () => void
     onSuccess: () => void
 }
 
 export function DeleteForm({ product, onCancel, onSuccess }: DeleteFormProps) {
-    const deleteProduct = useProductStore((state) => state.deleteProduct)
     const [isDeleting, setIsDeleting] = useState(false)
 
-    const handleDelete = () => {
+    const handleDelete = async () => {
         setIsDeleting(true)
 
         try {
-            // Delete the product
-            deleteProduct(product.id)
-
-            // Show success message
-            toast.success(`${product.name} has been deleted`)
-
-            // Call success callback
-            onSuccess()
-        } catch (error) {
-            console.error("Error deleting product:", error)
-            toast.error("Failed to delete product")
+            // Call the service to delete
+            await mockProductService.deleteProduct(product.id)
+            // Toast is now handled by the service call or the parent component
+            // toast.success(`${product.name} byl smazán`); 
+            onSuccess() // Call success callback
+        } catch (error: any) {
+            console.error("Chyba při mazání produktu:", error)
+            toast.error(error.message || "Nepodařilo se smazat produkt")
+            // Optionally call onCancel or keep dialog open on error?
         } finally {
             setIsDeleting(false)
         }
@@ -37,10 +34,10 @@ export function DeleteForm({ product, onCancel, onSuccess }: DeleteFormProps) {
     return (
         <div className="space-y-4">
             <p className="text-center">
-                Are you sure you want to delete <span className="font-bold">{product.name}</span>?
+                Opravdu si přejete smazat <span className="font-bold">{product.name}</span>?
             </p>
             <p className="text-center text-muted-foreground text-sm">
-                This action cannot be undone.
+                Tato akce nemůže být vrácena.
             </p>
 
             <div className="flex justify-end gap-2 pt-2">
@@ -50,7 +47,7 @@ export function DeleteForm({ product, onCancel, onSuccess }: DeleteFormProps) {
                     onClick={onCancel}
                     disabled={isDeleting}
                 >
-                    Cancel
+                    Zrušit
                 </Button>
                 <Button
                     type="button"
@@ -58,7 +55,7 @@ export function DeleteForm({ product, onCancel, onSuccess }: DeleteFormProps) {
                     onClick={handleDelete}
                     disabled={isDeleting}
                 >
-                    {isDeleting ? "Deleting..." : "Delete"}
+                    {isDeleting ? "Mazání..." : "Smazat"}
                 </Button>
             </div>
         </div>

@@ -9,32 +9,29 @@ import {
 } from "@/components/ui/alert-dialog"
 import { DeleteForm } from "@/components/forms/DeleteForm"
 import { useNavigate } from "react-router-dom"
-import type { ProductWithPosition } from "@/lib/types/product"
+import type { Product } from "@/lib/types/product"
 
 interface DeleteProductButtonProps {
-    product: ProductWithPosition
-    redirectToStock?: boolean
+    product: Product
     variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
     size?: "default" | "sm" | "lg" | "icon"
     className?: string
+    onDeleteSuccess?: () => void
 }
 
 export function DeleteProductButton({
                                         product,
-                                        redirectToStock = false,
                                         variant = "outline",
                                         size = "sm",
-                                        className = ""
+                                        className = "",
+                                        onDeleteSuccess
                                     }: DeleteProductButtonProps) {
     const [isOpen, setIsOpen] = useState(false)
-    const navigate = useNavigate()
 
     const handleSuccess = () => {
         setIsOpen(false)
-
-        // Redirect to stock page if requested
-        if (redirectToStock) {
-            navigate("/stock")
+        if (onDeleteSuccess) {
+            onDeleteSuccess()
         }
     }
 
@@ -45,13 +42,14 @@ export function DeleteProductButton({
                 size={size}
                 className={`${className} text-red-500 hover:text-red-700 hover:bg-red-50`}
                 onClick={() => setIsOpen(true)}
+                aria-label="Odstranit produkt"
             >
                 <Trash2 className="h-4 w-4 mr-2" />
-                Delete
+                Odstranit
             </Button>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Product</AlertDialogTitle>
+                    <AlertDialogTitle>Odstranit produkt?</AlertDialogTitle>
                 </AlertDialogHeader>
 
                 <DeleteForm

@@ -10,21 +10,25 @@ import {
 } from "@/components/ui/alert-dialog"
 import { DeleteForm } from "@/components/forms/DeleteForm"
 import { useNavigate } from "react-router-dom"
-import type { ProductWithPosition } from "@/lib/types/product"
+import type { Product } from "@/lib/types/product"
 
 interface DeleteProductProps {
-    product: ProductWithPosition
+    product: Product
     redirectToStock?: boolean
+    onDeleteSuccess?: () => void
 }
 
-export function DeleteProduct({ product, redirectToStock = false }: DeleteProductProps) {
+export function DeleteProduct({ product, redirectToStock = false, onDeleteSuccess }: DeleteProductProps) {
     const [isOpen, setIsOpen] = useState(false)
     const navigate = useNavigate()
 
     const handleSuccess = () => {
         setIsOpen(false)
 
-        // Redirect to stock page if requested
+        if (onDeleteSuccess) {
+            onDeleteSuccess()
+        }
+
         if (redirectToStock) {
             navigate("/stock")
         }
@@ -37,13 +41,14 @@ export function DeleteProduct({ product, redirectToStock = false }: DeleteProduc
                     variant="ghost"
                     size="icon"
                     className="hover:bg-destructive/20 hover:text-destructive h-8 w-8 p-0"
+                    aria-label="Odstranit produkt"
                 >
                     <Trash2 className="h-4 w-4" />
                 </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Product</AlertDialogTitle>
+                    <AlertDialogTitle>Odstranit produkt?</AlertDialogTitle>
                 </AlertDialogHeader>
 
                 <DeleteForm

@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react"
-import { useProductLogStore, type ActivityLog, type ActivityType } from "@/stores/productLogStore"
+import { useProductLogStore, type ActivityLog, type ActivityType } from "@lib/stores/productLogStore"
 import { useProductStore } from "@/stores/productStore"
 import { PlusCircle, MinusCircle, RefreshCw } from "lucide-react"
 import { Badge } from "@/components/ui/badge"

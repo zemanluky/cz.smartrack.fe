@@ -2,14 +2,14 @@ import { useState } from "react"
 import { Edit } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { EditProduct } from "./EditProduct"
-import type { ProductWithPosition } from "@/lib/types/product"
+import type { Product } from "@/lib/types/product"
 
 interface EditProductButtonProps {
-    product: ProductWithPosition
+    product: Product
     variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
     size?: "default" | "sm" | "lg" | "icon"
     className?: string
-    onProductUpdate?: (updatedProduct: ProductWithPosition) => void
+    onEditSuccess?: () => void
     id?: string // Added ID prop for reference
 }
 
@@ -18,17 +18,15 @@ export function EditProductButton({
                                       variant = "outline",
                                       size = "sm",
                                       className = "",
-                                      onProductUpdate,
+                                      onEditSuccess,
                                       id
                                   }: EditProductButtonProps) {
     const [isEditOpen, setIsEditOpen] = useState(false)
 
-    const handleSuccess = (updatedProduct: ProductWithPosition) => {
+    const handleSuccess = () => {
         setIsEditOpen(false)
-
-        // If a callback was provided, call it with the updated product
-        if (onProductUpdate) {
-            onProductUpdate(updatedProduct)
+        if (onEditSuccess) {
+            onEditSuccess()
         }
     }
 
@@ -42,7 +40,7 @@ export function EditProductButton({
                 onClick={() => setIsEditOpen(true)}
             >
                 <Edit className="h-4 w-4 mr-2" />
-                Edit
+                Upravit
             </Button>
 
             {isEditOpen && (

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useForm } from "react-hook-form"
+import { useForm, Controller, Control } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,13 +20,15 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { NFCScanner } from "@/components/nfc/NFCScanner"
-import { productFormSchema, type ProductFormValues } from "@/lib/schemas/product"
-import type { ProductWithPosition } from "@/lib/types/product"
+import { productFormSchema, ProductFormData } from "@/lib/schemas/product"
+import type { Product, MockCreateProductDTO, MockUpdateProductDTO } from "@/lib/types/product"
+import { mockProductService } from "@/lib/services/mockProductService"
+import { toast } from 'sonner'
 
 interface ProductFormProps {
-    defaultValues?: Partial<ProductFormValues>
-    product?: ProductWithPosition
-    onSubmit: (data: ProductFormValues) => void
+    defaultValues?: Partial<ProductFormData>
+    product?: Product
+    onSubmit: (data: MockCreateProductDTO | MockUpdateProductDTO) => Promise<void>
     onCancel?: () => void
     isSubmitting: boolean
     submitLabel?: string
@@ -34,126 +36,133 @@ interface ProductFormProps {
 }
 
 export function ProductForm({
-                                defaultValues,
-                                product,
-                                onSubmit,
-                                onCancel,
-                                isSubmitting,
-                                submitLabel = "Submit",
-                                showCancelButton = false
-                            }: ProductFormProps) {
-    const [priceInput, setPriceInput] = useState("")
-    const [nameInput, setNameInput] = useState("")
-    const [nameError, setNameError] = useState("")
+    defaultValues,
+    product,
+    onSubmit,
+    onCancel,
+    isSubmitting,
+    submitLabel = product ? "Update Product" : "Create Product",
+    showCancelButton = true
+}: ProductFormProps) {
+    const [nfcData, setNfcData] = useState<{ shelf_id: number; row: number; column: number } | null>(null)
+    const [isScanningNfc, setIsScanningNfc] = useState(false)
 
-    // Initialize the form with default values
-    // @ts-ignore - Ignore TypeScript errors for resolver
-    const form = useForm({
+    const form = useForm<ProductFormData>({
         resolver: zodResolver(productFormSchema),
         defaultValues: defaultValues || {
             name: "",
-            price: 0,
-            position_type: 'manual',
+            price: undefined,
+            quantity: undefined,
+            low_stock_threshold: undefined,
+            positionType: 'manual',
             shelf_position: {
-                shelf_id: 1,
-                row: 1,
-                column: 1,
-                low_stock_threshold_percent: 20,
-                max_current_product_capacity: 100
+                shelf_id: undefined,
+                row: undefined,
+                column: undefined,
             }
         }
     })
 
-    // Initialize controlled inputs when we have a product (for edit mode)
     useEffect(() => {
-        if (product) {
-            setPriceInput(product.price.toString())
-            setNameInput(product.name)
-        }
-    }, [product])
-
-    // Get current position type to determine what to display
-    const positionType = form.watch("position_type")
-    const currentRow = form.watch("shelf_position.row")
-    const currentColumn = form.watch("shelf_position.column")
-
-    const handleFormSubmit = (data: any) => {
-        // Create the final form data with properly formatted values
-        const formattedData = {
-            ...data,
-            price: parseFloat(priceInput) || 0,
-        }
-
-        onSubmit(formattedData)
-    }
-
-    // Handle price input change with ESP limit (4 digits, exactly 2 decimal places)
-    const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value
-
-        // Only allow up to 4 digits before decimal point, decimal point, and up to 2 decimal places
-        if (/^(\d{0,4}\.?\d{0,2})$/.test(value)) {
-            setPriceInput(value)
-
-            // Update the form value if we have a valid number
-            if (value === "" || value === ".") {
-                form.setValue("price", 0)
-            } else {
-                form.setValue("price", parseFloat(value))
+        if (defaultValues) {
+            form.reset(defaultValues)
+            setNfcData(null)
+            if (product?.position_type) {
+                form.setValue('positionType', product.position_type)
+            }
+            if (product?.shelf_position) {
+                form.setValue('shelf_position', product.shelf_position)
             }
         }
+    }, [defaultValues, product, form])
+
+    const positionType = form.watch("positionType")
+
+    const handleNfcSuccess = (data: { shelf_id: number; row: number; column: number }) => {
+        setNfcData(data)
+        toast.success('NFC Tag Scanned')
+        setIsScanningNfc(false)
+    }
+    const handleNfcError = (error: string) => {
+        toast.error(`NFC Scan Failed: ${error}`)
+        setIsScanningNfc(false)
+    }
+    const handleNfcScanTrigger = () => {
+        setIsScanningNfc(true)
     }
 
-    // Handle name input change with validation
-    const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value
-        setNameInput(value)
+    const handleFormSubmit = async (formData: ProductFormData) => {
+        console.log("Form Data Submitted:", formData)
 
-        // Validate name - 2-32 basic ASCII characters
-        if (!/^[\x20-\x7F]{2,32}$/.test(value) && value.length > 0) {
-            if (value.length < 2) {
-                setNameError("Name must be at least 2 characters")
-            } else if (value.length > 32) {
-                setNameError("Name cannot exceed 32 characters")
-            } else {
-                setNameError("Only basic ASCII characters are allowed")
+        let shelfPositionDto: { shelf_id: number; row: number; column: number; } | undefined = undefined
+        
+        if (formData.positionType === 'nfc' && nfcData) {
+            shelfPositionDto = nfcData
+        } else if (formData.positionType === 'manual' && formData.shelf_position) {
+            const shelf_id = typeof formData.shelf_position.shelf_id === 'number' ? formData.shelf_position.shelf_id : undefined
+            const row = typeof formData.shelf_position.row === 'number' ? formData.shelf_position.row : undefined
+            const column = typeof formData.shelf_position.column === 'number' ? formData.shelf_position.column : undefined
+            
+            if (shelf_id && row && column) {
+                shelfPositionDto = { shelf_id, row, column }
             }
-        } else {
-            setNameError("")
         }
+        
+        const quantity = typeof formData.quantity === 'number' ? formData.quantity : undefined
+        const low_stock_threshold = typeof formData.low_stock_threshold === 'number' ? formData.low_stock_threshold : undefined
+        
+        const dtoData: MockCreateProductDTO | MockUpdateProductDTO = {
+            name: formData.name,
+            price: formData.price,
+            organization_id: product?.organization_id ?? 1,
+            quantity: quantity,
+            low_stock_threshold: low_stock_threshold,
+            position_type: formData.positionType,
+            shelf_position: shelfPositionDto,
+            ...(product && { is_deleted: product.is_deleted })
+        }
+        
+        console.log("Prepared DTO:", dtoData)
 
-        form.setValue("name", value)
+        await onSubmit(dtoData).catch(error => {
+            console.error("Submission Error in Form Component Catched:", error)
+        })
     }
+
+    const handleNumberChange = (field: any, e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value
+        field.onChange(value === '' ? undefined : Number(value))
+    }
+
+    const formControl: Control<ProductFormData> = form.control
 
     return (
         <Form {...form}>
             <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
-                {/* Position Type */}
                 <FormField
-                    control={form.control}
-                    name="position_type"
+                    control={formControl}
+                    name="positionType"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Position Type</FormLabel>
+                            <FormLabel>Typ pozice</FormLabel>
                             <Select
                                 onValueChange={(value) => {
                                     field.onChange(value)
-                                    if (value === 'nfc') {
-                                        // Reset position when switching to NFC
-                                        form.setValue("shelf_position.row", 0)
-                                        form.setValue("shelf_position.column", 0)
+                                    if (value === 'nfc') setNfcData(null)
+                                    else {
+                                        setNfcData(null)
                                     }
                                 }}
                                 defaultValue={field.value}
                             >
                                 <FormControl>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select position type" />
+                                        <SelectValue placeholder="Vyberte typ pozice" />
                                     </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
                                     <SelectItem value="nfc">NFC Tag</SelectItem>
-                                    <SelectItem value="manual">Manual</SelectItem>
+                                    <SelectItem value="manual">Manuální zadání</SelectItem>
                                 </SelectContent>
                             </Select>
                             <FormMessage />
@@ -161,46 +170,59 @@ export function ProductForm({
                     )}
                 />
 
-                {/* Position options depending on position type */}
-                {positionType === 'manual' ? (
-                    <div className="grid grid-cols-2 gap-4">
+                {positionType === 'manual' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 border rounded-md">
                         <FormField
-                            control={form.control}
-                            name="shelf_position.row"
+                            control={formControl}
+                            name="shelf_position.shelf_id"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Row</FormLabel>
+                                    <FormLabel>Regál ID</FormLabel>
                                     <FormControl>
-                                        <Input
-                                            type="number"
-                                            min="0"
-                                            {...field}
-                                            onChange={(e) => {
-                                                const value = e.target.value === "" ? 0 : parseInt(e.target.value, 10)
-                                                field.onChange(value)
-                                            }}
+                                        <Input 
+                                            type="number" 
+                                            placeholder="např. 1" 
+                                            {...field} 
+                                            onChange={(e) => handleNumberChange(field, e)} 
+                                            value={field.value ?? ''}
                                         />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
-
                         <FormField
-                            control={form.control}
+                            control={formControl}
+                            name="shelf_position.row"
+                            render={({ field }) => (
+                                <FormItem>
+                                    <FormLabel>Řádek</FormLabel>
+                                    <FormControl>
+                                        <Input 
+                                            type="number" 
+                                            placeholder="např. 3" 
+                                            {...field} 
+                                            onChange={(e) => handleNumberChange(field, e)} 
+                                            value={field.value ?? ''}
+                                        />
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                        <FormField
+                            control={formControl}
                             name="shelf_position.column"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Column</FormLabel>
+                                    <FormLabel>Sloupec</FormLabel>
                                     <FormControl>
-                                        <Input
-                                            type="number"
-                                            min="0"
-                                            {...field}
-                                            onChange={(e) => {
-                                                const value = e.target.value === "" ? 0 : parseInt(e.target.value, 10)
-                                                field.onChange(value)
-                                            }}
+                                        <Input 
+                                            type="number" 
+                                            placeholder="např. 5" 
+                                            {...field} 
+                                            onChange={(e) => handleNumberChange(field, e)} 
+                                            value={field.value ?? ''}
                                         />
                                     </FormControl>
                                     <FormMessage />
@@ -208,80 +230,103 @@ export function ProductForm({
                             )}
                         />
                     </div>
-                ) : (
-                    // @ts-ignore
-                    <NFCScanner
-                        setValue={form.setValue}
-                        currentRow={currentRow}
-                        currentColumn={currentColumn}
-                    />
                 )}
 
-                {/* Product Name */}
+                {positionType === 'nfc' && (
+                    <div className="p-4 text-center border rounded-md">
+                        <NFCScanner 
+                            onScanSuccess={handleNfcSuccess} 
+                            onScanError={handleNfcError} 
+                            isScanning={isScanningNfc}
+                            onScanTrigger={handleNfcScanTrigger}
+                        />
+                        {nfcData && (
+                            <p className="mt-2 text-sm text-green-600">
+                                Naskenováno: Regál {nfcData.shelf_id}, Řada {nfcData.row}, Sloupec {nfcData.column}
+                            </p>
+                        )}
+                         {!nfcData && !isScanningNfc && (
+                             <p className="mt-2 text-sm text-muted-foreground">
+                                 Klikněte na tlačítko výše pro skenování NFC tagu.
+                             </p>
+                         )}
+                    </div>
+                )}
+                
                 <FormField
-                    control={form.control}
+                    control={formControl}
                     name="name"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Name</FormLabel>
+                            <FormLabel>Název produktu</FormLabel>
                             <FormControl>
-                                <Input
-                                    placeholder="Product name"
-                                    value={nameInput}
-                                    onChange={handleNameChange}
-                                />
+                                <Input placeholder="Zadejte název produktu" {...field} />
                             </FormControl>
-                            <FormDescription>
-                                2-32 basic ASCII characters
-                            </FormDescription>
-                            {nameError && (
-                                <p className="text-sm text-red-500">{nameError}</p>
-                            )}
                             <FormMessage />
                         </FormItem>
                     )}
                 />
-
-                {/* Product Price */}
+                
                 <FormField
-                    control={form.control}
+                    control={formControl}
                     name="price"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Price</FormLabel>
+                            <FormLabel>Cena (Kč)</FormLabel>
                             <FormControl>
-                                <Input
-                                    type="text"
-                                    placeholder="0.00"
-                                    value={priceInput}
-                                    onChange={handlePriceChange}
+                                <Input 
+                                    type="number" 
+                                    placeholder="např. 1200.50" 
+                                    step="0.01"
+                                    {...field} 
+                                    onChange={(e) => handleNumberChange(field, e)}
+                                    value={field.value ?? ''}
                                 />
                             </FormControl>
-                            <FormDescription>
-                                Format: XXXX.XX (max 9999.99)
-                            </FormDescription>
                             <FormMessage />
                         </FormItem>
                     )}
                 />
 
-                {/* Low Stock Threshold */}
                 <FormField
-                    control={form.control}
-                    name="shelf_position.low_stock_threshold_percent"
+                    control={formControl}
+                    name="quantity"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Low Stock Threshold (%)</FormLabel>
+                            <FormLabel>Množství (%)</FormLabel>
                             <FormControl>
-                                <Input
-                                    type="number"
+                                <Input 
+                                    type="number" 
+                                    placeholder="např. 75" 
+                                    step="1"
                                     min="0"
                                     max="100"
-                                    {...field}
-                                    onChange={(e) => {
-                                        const value = e.target.value === "" ? 0 : parseInt(e.target.value, 10)
-                                        field.onChange(value)
-                                    }}
+                                    {...field} 
+                                    onChange={(e) => handleNumberChange(field, e)}
+                                    value={field.value ?? ''}
+                                />
+                            </FormControl>
+                            <FormMessage />
+                        </FormItem>
+                    )}
+                />
+                
+                <FormField
+                    control={formControl}
+                    name="low_stock_threshold"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Limit nízkého stavu (%)</FormLabel>
+                            <FormControl>
+                                <Input 
+                                    type="number" 
+                                    placeholder="např. 20" 
+                                    step="1"
+                                    min="0"
+                                    max="100"
+                                    {...field} 
+                                    onChange={(e) => handleNumberChange(field, e)}
+                                    value={field.value ?? ''}
                                 />
                             </FormControl>
                             <FormMessage />
@@ -289,75 +334,14 @@ export function ProductForm({
                     )}
                 />
 
-                {/* Max Capacity - only shown in edit mode */}
-                {product && (
-                    <FormField
-                        control={form.control}
-                        name="shelf_position.max_current_product_capacity"
-                        render={({ field }) => (
-                            <FormItem>
-                                <FormLabel>Maximum Capacity</FormLabel>
-                                <FormControl>
-                                    <Input
-                                        type="number"
-                                        min="1"
-                                        {...field}
-                                        onChange={(e) => {
-                                            const value = e.target.value === "" ? 1 : parseInt(e.target.value, 10)
-                                            field.onChange(value)
-                                        }}
-                                    />
-                                </FormControl>
-                                <FormMessage />
-                            </FormItem>
-                        )}
-                    />
-                )}
-
-                {/* Current Stock - only shown in edit mode */}
-                {product && (
-                    <FormItem>
-                        <FormLabel>Current Stock Level (%)</FormLabel>
-                        <FormControl>
-                            <Input
-                                type="number"
-                                min="0"
-                                max="100"
-                                defaultValue={product.position.current_amount_percent}
-                                onChange={(e) => {
-                                    const value = e.target.value === "" ? 0 : parseInt(e.target.value, 10)
-                                    // Use direct assignment for this field since it's not part of the form schema
-                                    form.setValue("current_amount_percent", value)
-                                }}
-                            />
-                        </FormControl>
-                        <FormDescription>
-                            Current stock level as percentage of maximum capacity
-                        </FormDescription>
-                    </FormItem>
-                )}
-
-                {/* Hidden input for capacity in add mode */}
-                {!product && (
-                    <input
-                        type="hidden"
-                        name="shelf_position.max_current_product_capacity"
-                        value="100"
-                    />
-                )}
-
-                {/* Form buttons */}
-                <div className="flex justify-end gap-2">
+                <div className="flex justify-end space-x-4 pt-4">
                     {showCancelButton && onCancel && (
-                        <Button type="button" variant="outline" onClick={onCancel}>
-                            Cancel
+                        <Button type="button" variant="outline" onClick={onCancel} disabled={isSubmitting}>
+                            Zrušit
                         </Button>
                     )}
-                    <Button
-                        type="submit"
-                        disabled={isSubmitting}
-                    >
-                        {isSubmitting ? "Submitting..." : submitLabel}
+                    <Button type="submit" disabled={isSubmitting} >
+                        {isSubmitting ? "Odesílání..." : submitLabel}
                     </Button>
                 </div>
             </form>

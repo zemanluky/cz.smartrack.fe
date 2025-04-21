@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { ProductWithPosition } from '@/lib/types/product'
+import type { Product } from '@/lib/types/product' // Use the correct Product type
 
 export type ActivityType = 'add' | 'delete' | 'update'
 
@@ -14,7 +14,8 @@ export interface ActivityLog {
 
 interface ProductLogStore {
     logs: ActivityLog[]
-    addLog: (type: ActivityType, product: Partial<ProductWithPosition>, details?: string) => void
+    // Update the signature to accept Pick<Product, 'id' | 'name'>
+    addLog: (type: ActivityType, productData: Pick<Product, 'id' | 'name'>, details?: string) => void
     getLogs: () => ActivityLog[]
     clearLogs: () => void
 }
@@ -22,13 +23,14 @@ interface ProductLogStore {
 export const useProductLogStore = create<ProductLogStore>((set, get) => ({
     logs: [],
 
-    addLog: (type, product, details = '') => {
+    addLog: (type, productData, details = '') => {
         const newLog: ActivityLog = {
             id: get().logs.length + 1,
             timestamp: new Date(),
             type,
-            productId: product.id || 0,
-            productName: product.name || 'Unknown Product',
+            // Use data from the passed object
+            productId: productData.id ?? 0, // Handle potential undefined id if necessary
+            productName: productData.name ?? 'Unknown Product', // Handle potential undefined name
             details
         }
 
@@ -42,4 +44,4 @@ export const useProductLogStore = create<ProductLogStore>((set, get) => ({
     clearLogs: () => {
         set({ logs: [] })
     }
-}))
+})) 

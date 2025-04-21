@@ -1,12 +1,13 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Edit, ArrowUp, ArrowDown } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { ProductWithPosition } from "@/lib/types/product"
-import { DeleteProduct } from "@/components/actions/DeleteProduct"
-import { EditProductButton } from "@/components/actions/EditProductButton"
+import type { Product } from "@/lib/types/product"
+import { DeleteProduct } from "@/components/actions/product/DeleteProduct"
+import { EditProductButton } from "@/components/actions/product/EditProductButton"
 import { StockLevelCell } from "./cells/StockLevelCell"
+import { formatCurrency } from "@/lib/utils/format.ts"
 
-export const columns: ColumnDef<ProductWithPosition>[] = [
+export const columns: ColumnDef<Product>[] = [
     {
         accessorKey: "name",
         header: ({ column }) => {
@@ -17,7 +18,7 @@ export const columns: ColumnDef<ProductWithPosition>[] = [
                     onClick={() => column.toggleSorting(isSorted === "asc")}
                     className="p-0 font-medium"
                 >
-                    Name
+                    Název
                     {isSorted && (
                         <span className="ml-2">
                             {isSorted === "asc" ? (
@@ -30,7 +31,7 @@ export const columns: ColumnDef<ProductWithPosition>[] = [
                 </Button>
             );
         },
-        sortingFn: "alphanumeric" // Ensures proper alphabetical sorting
+        sortingFn: "alphanumeric"
     },
     {
         accessorKey: "price",
@@ -42,7 +43,7 @@ export const columns: ColumnDef<ProductWithPosition>[] = [
                     onClick={() => column.toggleSorting(isSorted === "asc")}
                     className="p-0 font-medium"
                 >
-                    Price
+                    Cena
                     {isSorted && (
                         <span className="ml-2">
                             {isSorted === "asc" ? (
@@ -56,13 +57,13 @@ export const columns: ColumnDef<ProductWithPosition>[] = [
             );
         },
         cell: ({ row }) => {
-            const price = parseFloat(row.getValue("price"))
-            return !isNaN(price) ? `$${price.toFixed(2)}` : 'N/A'
+            const price = row.original.price;
+            return formatCurrency(price);
         }
     },
     {
-        // Use accessorFn for complex data like position
-        accessorFn: (row) => `${row.position.row}-${row.position.column}`,
+        accessorFn: (row) => row.shelf_position ? 
+                            `${row.shelf_position.shelf_id}-${row.shelf_position.row}-${row.shelf_position.column}` : '',
         id: "position",
         header: ({ column }) => {
             const isSorted = column.getIsSorted();
@@ -72,7 +73,7 @@ export const columns: ColumnDef<ProductWithPosition>[] = [
                     onClick={() => column.toggleSorting(isSorted === "asc")}
                     className="p-0 font-medium"
                 >
-                    Position
+                    Pozice
                     {isSorted && (
                         <span className="ml-2">
                             {isSorted === "asc" ? (
@@ -86,82 +87,53 @@ export const columns: ColumnDef<ProductWithPosition>[] = [
             );
         },
         cell: ({ row }) => {
-            const position = row.original.position
-            return position ? `Row: ${position.row}, Col: ${position.column}` : 'N/A'
+            const position = row.original.shelf_position;
+            return position ? `Regál: ${position.shelf_id}, Ř: ${position.row}, S: ${position.column}` : 'Nezadáno';
         },
         sortingFn: (rowA, rowB, columnId) => {
-            // Compare rows first, then columns if rows are equal
-            const [rowA_row, rowA_col] = rowA.getValue(columnId).split('-').map(Number);
-            const [rowB_row, rowB_col] = rowB.getValue(columnId).split('-').map(Number);
+            const posA = rowA.original.shelf_position;
+            const posB = rowB.original.shelf_position;
+            if (!posA && !posB) return 0;
+            if (!posA) return -1;
+            if (!posB) return 1;
 
-            if (rowA_row === rowB_row) {
-                return rowA_col - rowB_col;
-            }
-            return rowA_row - rowB_row;
+            if (posA.shelf_id !== posB.shelf_id) return posA.shelf_id - posB.shelf_id;
+            if (posA.row !== posB.row) return posA.row - posB.row;
+            return posA.column - posB.column;
         }
     },
     {
-        // Use accessorFn for stock level percentage
-        accessorFn: (row) => row.position.current_amount_percent,
+        accessorKey: "low_stock_threshold",
+        header: "Min. stav",
+        cell: ({ row }) => row.original.low_stock_threshold ?? '-'
+    },
+    {
         id: "stockLevel",
-        header: ({ column }) => {
-            const isSorted = column.getIsSorted();
-            return (
-                <Button
-                    variant="ghost"
-                    onClick={() => column.toggleSorting(isSorted === "asc")}
-                    className="p-0 font-medium"
-                >
-                    Stock Level
-                    {isSorted && (
-                        <span className="ml-2">
-                            {isSorted === "asc" ? (
-                                <ArrowUp className="h-4 w-4" />
-                            ) : (
-                                <ArrowDown className="h-4 w-4" />
-                            )}
-                        </span>
-                    )}
-                </Button>
-            );
-        },
+        accessorFn: (row) => row.quantity,
+        header: "Stav zásob",
         cell: ({ row }) => <StockLevelCell row={row} />
     },
     {
         id: "actions",
         header: "",
-        cell: ({ row }) => (
-            <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                {/* Standard edit button that matches product detail page */}
-                <Button
-                    variant="outline"
-                    size="sm"
-                    className="flex items-center"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        // Create and click a hidden EditProductButton
-                        const hiddenButton = document.getElementById(`edit-product-${row.original.id}`);
-                        if (hiddenButton) {
-                            hiddenButton.click();
-                        }
-                    }}
-                >
-                    <Edit className="h-4 w-4 mr-2" />
-                    Edit
-                </Button>
-
-                {/* Hidden actual edit button that contains the dialog logic */}
-                <div className="hidden">
-                    <EditProductButton
-                        product={row.original}
-                        id={`edit-product-${row.original.id}`}
+        cell: ({ row, table }) => {
+            const { refreshData } = table.options.meta as { refreshData?: () => void } || {};
+            
+            return (
+                <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                    <EditProductButton 
+                        product={row.original} 
+                        onEditSuccess={refreshData}
+                    />
+                    <DeleteProduct 
+                        product={row.original} 
+                        onDeleteSuccess={refreshData}
                     />
                 </div>
-
-                {/* Original delete button - unchanged */}
-                <DeleteProduct product={row.original} />
-            </div>
-        ),
-        enableSorting: false
+            );
+        },
+        enableSorting: false,
+        meta: {
+        }
     }
 ]

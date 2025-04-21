@@ -1,4 +1,4 @@
-import { ProductActivityLog } from "@/components/actions/ProductActivityLog"
+import { ProductActivityLog } from "@/components/logs/ProductActivityLog"
 
 export default function ReportsPage() {
     return (
