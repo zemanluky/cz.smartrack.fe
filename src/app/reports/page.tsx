@@ -6,9 +6,9 @@ export default function ReportsPage() {
             <h1 className="text-3xl font-bold tracking-tight">Reporty</h1>
 
             <div className="grid grid-cols-1 gap-6">
-                {/* Activity log section */}
+                {/* Activity log section with full filtering capabilities */}
                 <div>
-                    <ProductActivityLog />
+                    <ProductActivityLog showFilters={true} />
                 </div>
 
                 {/* You can add more report sections in the future */}

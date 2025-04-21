@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { Edit, ArrowLeft, Trash2 } from "lucide-react"
+import { ArrowLeft, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
     Card,
@@ -17,15 +17,15 @@ import {
     TabsTrigger
 } from "@/components/ui/tabs"
 import { useProductStore } from "@/stores/productStore"
-import { EditProduct } from "@/components/actions/EditProduct"
 import { Badge } from "@/components/ui/badge"
+import { EditProductButton } from "@/components/actions/EditProductButton"
+import { ProductActivityLog } from "@/components/actions/ProductActivityLog"
 import type { ProductWithPosition } from "@/lib/types/product"
-
+import { DeleteProductButton } from "@/components/actions/DeleteProductButton"
 export default function ProductDetailPage() {
     const { productId } = useParams<{ productId: string }>()
     const navigate = useNavigate()
     const [product, setProduct] = useState<ProductWithPosition | null>(null)
-    const [isEditOpen, setIsEditOpen] = useState(false)
 
     // Get products array directly instead of the function
     const products = useProductStore((state) => state.products)
@@ -97,25 +97,20 @@ export default function ProductDetailPage() {
                     Back to Inventory
                 </Button>
                 <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsEditOpen(true)}
-                    >
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                        onClick={handleDelete}
-                    >
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Delete
-                    </Button>
+                    {/* Using the EditProductButton */}
+                    <EditProductButton
+                        product={product}
+                        onProductUpdate={setProduct}
+                    />
+
+                    {/* Using the new DeleteProductButton */}
+                    <DeleteProductButton
+                        product={product}
+                        redirectToStock={true}
+                    />
                 </div>
             </div>
+
 
             {/* Product details */}
             <div>
@@ -220,32 +215,14 @@ export default function ProductDetailPage() {
                     </Card>
                 </TabsContent>
 
-                {/* History tab - placeholder for future functionality */}
+                {/* History tab - now with actual activity logs */}
                 <TabsContent value="history" className="mt-6">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Activity History</CardTitle>
-                            <CardDescription>Recent changes to this product</CardDescription>
-                        </CardHeader>
-                        <CardContent>
-                            <p className="text-gray-500 italic">History tracking will be implemented in a future update.</p>
-                        </CardContent>
-                    </Card>
+                    <ProductActivityLog
+                        productId={product.id}
+                        showFilters={true}
+                    />
                 </TabsContent>
             </Tabs>
-
-            {/* Edit modal */}
-            {isEditOpen && (
-                <EditProduct
-                    product={product}
-                    isOpen={isEditOpen}
-                    onClose={() => setIsEditOpen(false)}
-                    onSuccess={(updatedProduct) => {
-                        setProduct(updatedProduct)
-                        setIsEditOpen(false)
-                    }}
-                />
-            )}
         </div>
     )
 }

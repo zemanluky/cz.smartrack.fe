@@ -23,7 +23,11 @@ import { AddProduct } from "../actions/AddProduct"
 export function ProductTable() {
     const products = useProductStore((state) => state.products)
     const navigate = useNavigate()
-    const [sorting, setSorting] = React.useState<SortingState>([])
+
+    // Initialize with name sorted ascending by default
+    const [sorting, setSorting] = React.useState<SortingState>([
+        { id: 'name', desc: false } // Ascending sort for names
+    ])
 
     const table = useReactTable<ProductWithPosition>({
         data: products,
@@ -34,11 +38,23 @@ export function ProductTable() {
         state: {
             sorting,
         },
+        // Enable multi-sorting
+        enableMultiSort: true,
     })
 
-    const handleRowClick = (productId: number) => {
-        navigate(`/stock/${productId}`);
-    };
+    const handleRowClick = (productId: number, e: React.MouseEvent) => {
+        // Don't navigate if clicking on action buttons (any button or its parent)
+        if (
+            (e.target as HTMLElement).tagName === 'BUTTON' ||
+            (e.target as HTMLElement).closest('button') ||
+            // Also check for the actions cell
+            (e.target as HTMLElement).closest('[data-cell-type="actions"]')
+        ) {
+            return
+        }
+
+        navigate(`/stock/${productId}`)
+    }
 
     return (
         <div className="space-y-4">
@@ -55,19 +71,12 @@ export function ProductTable() {
                                 {headerGroup.headers.map((header) => (
                                     <TableHead
                                         key={header.id}
-                                        className={header.column.getCanSort() ? "cursor-pointer select-none" : ""}
-                                        onClick={header.column.getToggleSortingHandler()}
+                                        className="px-4 py-3"
                                     >
-                                        <div className="flex items-center gap-1">
-                                            {flexRender(
-                                                header.column.columnDef.header,
-                                                header.getContext()
-                                            )}
-                                            {{
-                                                asc: " 🔼",
-                                                desc: " 🔽",
-                                            }[header.column.getIsSorted() as string] || null}
-                                        </div>
+                                        {flexRender(
+                                            header.column.columnDef.header,
+                                            header.getContext()
+                                        )}
                                     </TableHead>
                                 ))}
                             </TableRow>
@@ -79,17 +88,23 @@ export function ProductTable() {
                                 <TableRow
                                     key={row.id}
                                     data-state={row.getIsSelected() && "selected"}
-                                    className="hover:bg-muted/50 cursor-pointer transition-colors"
-                                    onClick={() => handleRowClick(row.original.id)}
+                                    className="hover:bg-muted/50 cursor-pointer transition-colors relative"
+                                    onClick={(e) => handleRowClick(row.original.id, e)}
                                 >
                                     {row.getVisibleCells().map((cell) => (
-                                        <TableCell key={cell.id}>
+                                        <TableCell
+                                            key={cell.id}
+                                            data-cell-type={cell.column.id === "actions" ? "actions" : "default"}
+                                            className="px-4 py-3"
+                                        >
                                             {flexRender(
                                                 cell.column.columnDef.cell,
                                                 cell.getContext()
                                             )}
                                         </TableCell>
                                     ))}
+                                    {/* Visual indicator overlay stops before the actions cell */}
+                                    <div className="absolute inset-0 right-[140px] pointer-events-none bg-transparent"></div>
                                 </TableRow>
                             ))
                         ) : (

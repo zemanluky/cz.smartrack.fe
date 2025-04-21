@@ -1,5 +1,6 @@
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { useProductLogStore, type ActivityLog, type ActivityType } from "@/stores/productLogStore"
+import { useProductStore } from "@/stores/productStore"
 import { PlusCircle, MinusCircle, RefreshCw } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -9,22 +10,55 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
+import { LogFilterBar, type LogFilter } from "./LogFilterBar"
 
-export function ProductActivityLog() {
+interface ProductActivityLogProps {
+    productId?: number  // Optional: when provided, only show logs for this product
+    showFilters?: boolean // Whether to show the filter UI
+}
+
+export function ProductActivityLog({ productId, showFilters = true }: ProductActivityLogProps) {
     const logs = useProductLogStore((state) => state.logs)
-    const [filter, setFilter] = useState<ActivityType | 'all'>('all')
+    const products = useProductStore((state) => state.products)
 
-    // Filter logs based on selected filter
-    const filteredLogs = filter === 'all'
-        ? logs
-        : logs.filter(log => log.type === filter)
+    // Create product options for filter
+    const productOptions = useMemo(() =>
+            products.map(p => ({ id: p.id, name: p.name })),
+        [products]
+    )
+
+    // Set up initial filter state
+    const [filter, setFilter] = useState<LogFilter>({
+        search: '',
+        type: 'all',
+        dateRange: { from: null, to: null },
+        productId: productId || null
+    })
+
+    // Apply filters to logs
+    const filteredLogs = useMemo(() => {
+        return logs.filter(log => {
+            // Filter by product ID if specified
+            if (filter.productId !== null && log.productId !== filter.productId) {
+                return false
+            }
+
+            // Filter by activity type
+            if (filter.type !== 'all' && log.type !== filter.type) {
+                return false
+            }
+
+            // Filter by search term
+            if (filter.search && !log.productName.toLowerCase().includes(filter.search.toLowerCase()) &&
+                !log.details.toLowerCase().includes(filter.search.toLowerCase())) {
+                return false
+            }
+
+            // Date range filtering could be added here
+
+            return true
+        })
+    }, [logs, filter])
 
     // Format timestamp to be more readable
     const formatTime = (date: Date) => {
@@ -32,8 +66,11 @@ export function ProductActivityLog() {
             hour: '2-digit',
             minute: '2-digit',
             second: '2-digit',
-            hour12: false
-        }).format(date)
+            hour12: false,
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        }).format(date instanceof Date ? date : new Date(date))
     }
 
     // Get appropriate icon and color for activity type
@@ -62,24 +99,24 @@ export function ProductActivityLog() {
     return (
         <Card>
             <CardHeader className="pb-3">
-                <div className="flex justify-between items-center">
+                <div className="flex justify-between items-center mb-2">
                     <div>
                         <CardTitle>Activity Log</CardTitle>
                         <CardDescription>Recent product inventory activities</CardDescription>
                     </div>
-                    <Select value={filter} onValueChange={(value) => setFilter(value as ActivityType | 'all')}>
-                        <SelectTrigger className="w-36">
-                            <SelectValue placeholder="Filter by type" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All Activities</SelectItem>
-                            <SelectItem value="add">Added</SelectItem>
-                            <SelectItem value="delete">Deleted</SelectItem>
-                            <SelectItem value="update">Updated</SelectItem>
-                        </SelectContent>
-                    </Select>
                 </div>
+
+                {/* Only show filter UI if requested */}
+                {showFilters && (
+                    <LogFilterBar
+                        filter={filter}
+                        onFilterChange={setFilter}
+                        showProductFilter={!productId} // Only show product filter if not in product detail view
+                        productOptions={productOptions}
+                    />
+                )}
             </CardHeader>
+
             <CardContent className="pt-0">
                 {filteredLogs.length === 0 ? (
                     <div className="text-center py-4 text-gray-500">
@@ -97,7 +134,7 @@ export function ProductActivityLog() {
                                             {getActivityBadge(log.type)}
                                         </div>
                                         <div className="text-sm text-gray-500">
-                                            {formatTime(new Date(log.timestamp))}
+                                            {formatTime(log.timestamp)}
                                         </div>
                                     </div>
                                     <p className="text-sm text-gray-600">{log.details}</p>

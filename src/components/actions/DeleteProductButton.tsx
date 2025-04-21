@@ -6,18 +6,26 @@ import {
     AlertDialogContent,
     AlertDialogHeader,
     AlertDialogTitle,
-    AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { DeleteForm } from "@/components/forms/DeleteForm"
 import { useNavigate } from "react-router-dom"
 import type { ProductWithPosition } from "@/lib/types/product"
 
-interface DeleteProductProps {
+interface DeleteProductButtonProps {
     product: ProductWithPosition
     redirectToStock?: boolean
+    variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
+    size?: "default" | "sm" | "lg" | "icon"
+    className?: string
 }
 
-export function DeleteProduct({ product, redirectToStock = false }: DeleteProductProps) {
+export function DeleteProductButton({
+                                        product,
+                                        redirectToStock = false,
+                                        variant = "outline",
+                                        size = "sm",
+                                        className = ""
+                                    }: DeleteProductButtonProps) {
     const [isOpen, setIsOpen] = useState(false)
     const navigate = useNavigate()
 
@@ -32,15 +40,15 @@ export function DeleteProduct({ product, redirectToStock = false }: DeleteProduc
 
     return (
         <AlertDialog open={isOpen} onOpenChange={setIsOpen}>
-            <AlertDialogTrigger asChild>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="hover:bg-destructive/20 hover:text-destructive h-8 w-8 p-0"
-                >
-                    <Trash2 className="h-4 w-4" />
-                </Button>
-            </AlertDialogTrigger>
+            <Button
+                variant={variant}
+                size={size}
+                className={`${className} text-red-500 hover:text-red-700 hover:bg-red-50`}
+                onClick={() => setIsOpen(true)}
+            >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Delete
+            </Button>
             <AlertDialogContent>
                 <AlertDialogHeader>
                     <AlertDialogTitle>Delete Product</AlertDialogTitle>

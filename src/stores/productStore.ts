@@ -30,7 +30,7 @@ const mockProducts: ProductWithPosition[] = [
             shelf_id: 1,
             row: 1,
             column: 2,
-            current_amount_percent: 15, // Below threshold
+            current_amount_percent: 15,
             low_stock_threshold_percent: 25,
             max_current_product_capacity: 100
         }
@@ -45,7 +45,7 @@ const mockProducts: ProductWithPosition[] = [
             shelf_id: 1,
             row: 2,
             column: 1,
-            current_amount_percent: 30, // Near threshold
+            current_amount_percent: 30,
             low_stock_threshold_percent: 20,
             max_current_product_capacity: 100
         }
@@ -66,6 +66,65 @@ const mockProducts: ProductWithPosition[] = [
         }
     }
 ]
+
+// Helper function to find differences between two objects
+function findChanges(oldObj: any, newObj: any, path = ""): string[] {
+    const changes: string[] = [];
+
+    // Check for differences in primitive properties
+    for (const key in newObj) {
+        const currentPath = path ? `${path}.${key}` : key;
+
+        // Skip if key doesn't exist in old object
+        if (!(key in oldObj)) continue;
+
+        // If value is an object, recursively check it
+        if (typeof newObj[key] === 'object' && newObj[key] !== null &&
+            typeof oldObj[key] === 'object' && oldObj[key] !== null) {
+            const nestedChanges = findChanges(oldObj[key], newObj[key], currentPath);
+            changes.push(...nestedChanges);
+        }
+        // Check if primitive values are different
+        else if (oldObj[key] !== newObj[key]) {
+            // Format the change based on type
+            if (typeof newObj[key] === 'number') {
+                // For prices, format as currency
+                if (key === 'price' || currentPath.endsWith('.price')) {
+                    changes.push(`${getLabelForPath(currentPath)}: $${oldObj[key].toFixed(2)} → $${newObj[key].toFixed(2)}`);
+                }
+                // For percentages, add % symbol
+                else if (key.includes('percent') || currentPath.includes('percent')) {
+                    changes.push(`${getLabelForPath(currentPath)}: ${oldObj[key]}% → ${newObj[key]}%`);
+                }
+                // Regular numbers
+                else {
+                    changes.push(`${getLabelForPath(currentPath)}: ${oldObj[key]} → ${newObj[key]}`);
+                }
+            } else {
+                // Handle strings and other types
+                changes.push(`${getLabelForPath(currentPath)}: ${oldObj[key]} → ${newObj[key]}`);
+            }
+        }
+    }
+
+    return changes;
+}
+
+// Function to generate a readable label for a path
+function getLabelForPath(path: string): string {
+    const pathMapping: Record<string, string> = {
+        'name': 'Name',
+        'price': 'Price',
+        'position.row': 'Row',
+        'position.column': 'Column',
+        'position.shelf_id': 'Shelf ID',
+        'position.current_amount_percent': 'Stock Level',
+        'position.low_stock_threshold_percent': 'Low Stock Threshold',
+        'position.max_current_product_capacity': 'Maximum Capacity'
+    };
+
+    return pathMapping[path] || path;
+}
 
 interface ProductStore {
     products: ProductWithPosition[]
@@ -128,9 +187,21 @@ export const useProductStore = create<ProductStore>((set, get) => ({
             } : existingProduct.position
         };
 
-        // Log the update operation
+        // Find what changed
+        const changes = findChanges(existingProduct, updatedProduct);
+
+        // Create a human-readable changes summary
+        let changesSummary = "";
+
+        if (changes.length > 0) {
+            changesSummary = changes.join(', ');
+        } else {
+            changesSummary = "No changes detected";
+        }
+
+        // Log the update operation with detailed changes
         const logStore = useProductLogStore.getState();
-        logStore.addLog('update', updatedProduct, `Product details updated`);
+        logStore.addLog('update', updatedProduct, changesSummary);
 
         // Update product in state
         set((state) => ({
