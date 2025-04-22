@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useForm, Controller, Control } from "react-hook-form"
+import { useForm, Controller } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { Button } from "@/components/ui/button"
 import {
@@ -134,13 +134,11 @@ export function ProductForm({
         field.onChange(value === '' ? undefined : Number(value))
     }
 
-    const formControl: Control<ProductFormData> = form.control
-
     return (
         <Form {...form}>
-            <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+            <form onSubmit={form.handleSubmit<ProductFormData>(handleFormSubmit)} className="space-y-6">
                 <FormField
-                    control={formControl}
+                    control={form.control}
                     name="positionType"
                     render={({ field }) => (
                         <FormItem>
@@ -148,9 +146,11 @@ export function ProductForm({
                             <Select
                                 onValueChange={(value) => {
                                     field.onChange(value)
-                                    if (value === 'nfc') setNfcData(null)
-                                    else {
-                                        setNfcData(null)
+                                    setNfcData(null)
+                                    if (value === 'nfc') {
+                                        form.setValue('shelf_position.shelf_id', undefined)
+                                        form.setValue('shelf_position.row', undefined)
+                                        form.setValue('shelf_position.column', undefined)
                                     }
                                 }}
                                 defaultValue={field.value}
@@ -161,8 +161,8 @@ export function ProductForm({
                                     </SelectTrigger>
                                 </FormControl>
                                 <SelectContent>
-                                    <SelectItem value="nfc">NFC Tag</SelectItem>
-                                    <SelectItem value="manual">Manuální zadání</SelectItem>
+                                    <SelectItem key="nfc" value="nfc">NFC Tag</SelectItem>
+                                    <SelectItem key="manual" value="manual">Manuální zadání</SelectItem>
                                 </SelectContent>
                             </Select>
                             <FormMessage />
@@ -173,7 +173,7 @@ export function ProductForm({
                 {positionType === 'manual' && (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 border rounded-md">
                         <FormField
-                            control={formControl}
+                            control={form.control}
                             name="shelf_position.shelf_id"
                             render={({ field }) => (
                                 <FormItem>
@@ -192,7 +192,7 @@ export function ProductForm({
                             )}
                         />
                         <FormField
-                            control={formControl}
+                            control={form.control}
                             name="shelf_position.row"
                             render={({ field }) => (
                                 <FormItem>
@@ -211,7 +211,7 @@ export function ProductForm({
                             )}
                         />
                         <FormField
-                            control={formControl}
+                            control={form.control}
                             name="shelf_position.column"
                             render={({ field }) => (
                                 <FormItem>
@@ -254,7 +254,7 @@ export function ProductForm({
                 )}
                 
                 <FormField
-                    control={formControl}
+                    control={form.control}
                     name="name"
                     render={({ field }) => (
                         <FormItem>
@@ -268,7 +268,7 @@ export function ProductForm({
                 />
                 
                 <FormField
-                    control={formControl}
+                    control={form.control}
                     name="price"
                     render={({ field }) => (
                         <FormItem>
@@ -289,7 +289,7 @@ export function ProductForm({
                 />
 
                 <FormField
-                    control={formControl}
+                    control={form.control}
                     name="quantity"
                     render={({ field }) => (
                         <FormItem>
@@ -312,7 +312,7 @@ export function ProductForm({
                 />
                 
                 <FormField
-                    control={formControl}
+                    control={form.control}
                     name="low_stock_threshold"
                     render={({ field }) => (
                         <FormItem>

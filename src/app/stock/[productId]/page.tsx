@@ -6,7 +6,6 @@ import {
     Card,
     CardContent,
     CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
@@ -24,7 +23,7 @@ import type { Product } from "@/lib/types/product"
 import { DeleteProductButton } from "@/components/actions/product/DeleteProductButton"
 import { toast } from 'sonner'
 import { formatCurrency } from "@/lib/utils/format"
-import { cn } from "@/lib/utils/format.ts"
+import { cn } from "@/lib/utils/format"
 
 export default function ProductDetailPage() {
     const { productId } = useParams<{ productId: string }>()
