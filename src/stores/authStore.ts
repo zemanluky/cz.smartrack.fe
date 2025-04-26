@@ -16,9 +16,17 @@ type AuthState = {
   restoreSession: () => void;
 };
 
+const mockUser: User = {
+  id: "1",
+  name: "Jindra ze Skalice",
+  email: "jindra@skalice.cz",
+  organizationId: "1",
+  role: "admin",
+};
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  token: null,
+  user: mockUser,
+  token: "mock-token",
 
   login: (user, token) => {
     localStorage.setItem("user", JSON.stringify(user));
