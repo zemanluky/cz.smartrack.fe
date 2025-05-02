@@ -2,7 +2,7 @@ import axios from "axios";
 import { useAuthStore } from "../stores/authStore";
 
 const api = axios.create({
-  baseURL: "https://api.smartrack.zeluk.dev", // Replace with your real backend URL
+  baseURL: "https://api.smartrack.zeluk.dev",
 });
 
 api.interceptors.request.use((config) => {

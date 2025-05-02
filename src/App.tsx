@@ -4,6 +4,7 @@ import { Layout } from "./components/ui/layout";
 import StockPage from "@/app/stock/page";
 import ReportsPage from "@/app/reports/page";
 import { useAuthStore } from "./stores/authStore";
+import OrganizationsPage from "./app/organizations/page";
 import { stat } from "fs";
 
 const Placeholder = ({ title }: { title: string }) => (
@@ -27,6 +28,7 @@ export default function App() {
             element={<Placeholder title="Inventura" />}
           />
           <Route path="/reports" element={<ReportsPage />} />{" "}
+          <Route path="/organizations" element={<OrganizationsPage />} />
           {/* Updated to use the new ReportsPage */}
         </Routes>
       </Layout>
