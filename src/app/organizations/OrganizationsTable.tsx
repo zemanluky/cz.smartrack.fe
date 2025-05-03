@@ -1,4 +1,12 @@
 import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+  ColumnDef,
+} from "@tanstack/react-table";
+import { useOrganizationStore } from "@/stores/organizationsStore";
+import { AddOrganization } from "./addOrganization";
+import {
   Table,
   TableBody,
   TableCell,
@@ -7,19 +15,50 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
+type Organization = {
+  id: string;
+  name: string;
+  active: boolean;
+};
+
 export function OrganizationsTable() {
+  const organizations = useOrganizationStore((state) => state.organizations);
+
+  const columns: ColumnDef<Organization>[] = [
+    {
+      accessorKey: "id",
+      header: "ID",
+      cell: (info) => info.getValue(),
+    },
+    {
+      accessorKey: "name",
+      header: "Name",
+      cell: (info) => info.getValue(),
+    },
+    {
+      accessorKey: "active",
+      header: "Active",
+      cell: (info) => (info.getValue() ? "✅" : "❌"),
+    },
+  ];
+
+  const table = useReactTable({
+    data: organizations,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
   return (
     <div className="space-y-4">
-      {/* Add this header section with the button */}
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">Organizations</h2>
-        {/* <AddProduct /> */}
+        <AddOrganization />
       </div>
 
       <div className="rounded-md border">
         <Table>
           <TableHeader>
-            {/* {table.getHeaderGroups().map((headerGroup) => (
+            {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <TableHead key={header.id}>
@@ -32,16 +71,12 @@ export function OrganizationsTable() {
                   </TableHead>
                 ))}
               </TableRow>
-            ))} */}
+            ))}
           </TableHeader>
           <TableBody>
-            {/* {table.getRowModel().rows?.length ? (
+            {table.getRowModel().rows.length ? (
               table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                  className="hover:bg-muted/50"
-                >
+                <TableRow key={row.id}>
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
                       {flexRender(
@@ -56,12 +91,12 @@ export function OrganizationsTable() {
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center"
+                  className="text-center h-24"
                 >
-                  No products found.
+                  No organizations found.
                 </TableCell>
               </TableRow>
-            )} */}
+            )}
           </TableBody>
         </Table>
       </div>
