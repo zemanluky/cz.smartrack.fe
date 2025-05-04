@@ -59,7 +59,7 @@ export function AddOrganization() {
     setIsSubmitting(true);
     try {
       const newOrg = {
-        id: Date.now(), // Temporary unique ID
+        id: Date.now(), // temporary
         ...data,
       };
       addOrganization(newOrg);
