@@ -5,6 +5,7 @@ const navItems = [
   { label: "Přehled", to: "/dashboard", icon: LayoutDashboard },
   { label: "Sklad", to: "/stock", icon: Boxes },
   { label: "Reporty", to: "/reports", icon: BarChart },
+  { label: "Organizace", to: "/organizations", icon: LayoutDashboard },
 ];
 
 export const Sidebar = () => {

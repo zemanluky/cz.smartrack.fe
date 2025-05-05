@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { login, logout } from "../api/authApi";
+import { getUser } from "../api/userApi";
 
 type User = {
   id: string;
@@ -11,44 +13,65 @@ type User = {
 type AuthState = {
   user: User | null;
   token: string | null;
-  login: (user: User, token: string) => void;
-  logout: () => void;
+  loginUser: (email: string, password: string) => Promise<boolean>;
+  logoutUser: () => void;
   restoreSession: () => void;
-};
-
-const mockUser: User = {
-  id: "1",
-  name: "Jindra ze Skalice",
-  email: "jindra@skalice.cz",
-  organizationId: "1",
-  role: "admin",
+  isSessionRestored: boolean;
 };
 
 export const useAuthStore = create<AuthState>((set) => ({
-  user: mockUser,
-  token: "mock-token",
+  user: null,
+  token: null,
+  isSessionRestored: false,
 
-  login: (user, token) => {
-    localStorage.setItem("user", JSON.stringify(user));
-    localStorage.setItem("token", token);
-    set({ user, token });
+  loginUser: async (email: string, password: string) => {
+    try {
+      const token = await login(email, password);
+      if (token) {
+        localStorage.setItem("token", token);
+        set({ token });
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Login failed", error);
+      return false;
+    }
   },
 
-  logout: () => {
-    localStorage.removeItem("user");
+  logoutUser: async () => {
     localStorage.removeItem("token");
-    set({ user: null, token: null });
+    try {
+      await logout();
+    } catch (error) {
+      console.error("Logout failed", error);
+    }
+    set({ token: null });
+  },
+
+  getUser: async () => {
+    try {
+      const user = await getUser();
+      if (user) {
+        localStorage.setItem("user", user);
+        set({ user });
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("User fetch failed", error);
+      return false;
+    }
   },
 
   restoreSession: () => {
-    const storedUser = localStorage.getItem("user");
     const storedToken = localStorage.getItem("token");
 
-    if (storedUser && storedToken) {
+    if (storedToken) {
       set({
-        user: JSON.parse(storedUser) as User,
         token: storedToken,
       });
     }
+    set({ isSessionRestored: true });
   },
 }));

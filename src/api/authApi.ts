@@ -1,5 +1,4 @@
 import api from "./api";
-import { useAuthStore } from "../stores/authStore";
 
 export async function login(email: string, password: string) {
   const options = {
@@ -12,7 +11,7 @@ export async function login(email: string, password: string) {
   try {
     const { data } = await api.request(options);
     console.log(data);
-    useAuthStore.getState().login(data.user, data.token);
+    return data.access;
   } catch (error) {
     console.error(error);
   }
@@ -27,7 +26,6 @@ export async function logout() {
   try {
     const { data } = await api.request(options);
     console.log(data);
-    useAuthStore.getState().logout();
   } catch (error) {
     console.error(error);
   }

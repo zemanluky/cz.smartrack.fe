@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { getOrganizations } from "../api/organizationsApi";
 
 type Organization = {
   id: number;
@@ -8,24 +9,28 @@ type Organization = {
 
 type OrganizationStore = {
   organizations: Organization[];
-  setOrganizations: (orgs: Organization[]) => void;
+  setOrganizations: () => Promise<boolean>;
   addOrganization: (org: Organization) => void;
   updateOrganization: (org: Organization) => void;
   removeOrganization: (id: number) => void;
 };
 
-const mockOrganizations: Organization[] = [
-  { id: 1, name: "Organization A", active: true },
-  { id: 2, name: "Organization B", active: false },
-  { id: 3, name: "Organization C", active: true },
-  { id: 4, name: "Organization D", active: false },
-  { id: 5, name: "Organization E", active: true },
-];
-
 export const useOrganizationStore = create<OrganizationStore>((set) => ({
-  organizations: mockOrganizations,
+  organizations: [],
 
-  setOrganizations: (orgs) => set({ organizations: orgs }),
+  setOrganizations: async () => {
+    try {
+      const res = await getOrganizations();
+      if (res) {
+        set({ organizations: res.items });
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("Orgs fetch failed", error);
+      return false;
+    }
+  },
 
   addOrganization: (org) =>
     set((state) => ({

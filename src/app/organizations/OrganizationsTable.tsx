@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useEffect } from "react";
 
 type Organization = {
   id: string;
@@ -22,7 +23,11 @@ type Organization = {
 };
 
 export function OrganizationsTable() {
-  const organizations = useOrganizationStore((state) => state.organizations);
+  const { organizations, setOrganizations } = useOrganizationStore();
+
+  useEffect(() => {
+    setOrganizations();
+  }, []);
 
   const columns: ColumnDef<Organization>[] = [
     {

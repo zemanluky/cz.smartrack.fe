@@ -1,5 +1,4 @@
 import api from "./api";
-import { useOrganizationStore } from "@/stores/organizationsStore";
 
 export async function getOrganizations() {
   const options = {
@@ -10,7 +9,7 @@ export async function getOrganizations() {
   try {
     const { data } = await api.request(options);
     console.log(data);
-    useOrganizationStore.getState().setOrganizations(data);
+    return data;
   } catch (error) {
     console.error(error);
   }
@@ -27,7 +26,6 @@ export async function postOrganization(name: string) {
   try {
     const { data } = await api.request(options);
     console.log(data);
-    useOrganizationStore.getState().addOrganization(data);
   } catch (error) {
     console.error(error);
   }
