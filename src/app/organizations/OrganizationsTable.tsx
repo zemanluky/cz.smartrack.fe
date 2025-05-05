@@ -14,20 +14,43 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
 
 type Organization = {
-  id: string;
+  id: number;
   name: string;
   active: boolean;
 };
 
 export function OrganizationsTable() {
-  const { organizations, setOrganizations } = useOrganizationStore();
+  const { organizations, setOrganizations, removeOrganization } =
+    useOrganizationStore();
+
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedOrgId, setSelectedOrgId] = useState<number | null>(null);
 
   useEffect(() => {
     setOrganizations();
   }, []);
+
+  const confirmDelete = () => {
+    if (selectedOrgId !== null) {
+      removeOrganization(selectedOrgId);
+      setDialogOpen(false);
+      setSelectedOrgId(null);
+    }
+  };
 
   const columns: ColumnDef<Organization>[] = [
     {
@@ -44,6 +67,21 @@ export function OrganizationsTable() {
       accessorKey: "active",
       header: "Active",
       cell: (info) => (info.getValue() ? "✅" : "❌"),
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => (
+        <button
+          onClick={() => {
+            setSelectedOrgId(row.original.id);
+            setDialogOpen(true);
+          }}
+          className="text-red-500 hover:underline"
+        >
+          Delete
+        </button>
+      ),
     },
   ];
 
@@ -105,6 +143,23 @@ export function OrganizationsTable() {
           </TableBody>
         </Table>
       </div>
+
+      <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the organization.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

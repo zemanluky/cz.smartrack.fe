@@ -1,5 +1,9 @@
 import { create } from "zustand";
-import { getOrganizations } from "../api/organizationsApi";
+import {
+  getOrganizations,
+  postOrganization,
+  deleteOrganizations,
+} from "../api/organizationsApi";
 
 type Organization = {
   id: number;
@@ -10,7 +14,7 @@ type Organization = {
 type OrganizationStore = {
   organizations: Organization[];
   setOrganizations: () => Promise<boolean>;
-  addOrganization: (org: Organization) => void;
+  addOrganization: (name: string, active: boolean) => Promise<void>;
   updateOrganization: (org: Organization) => void;
   removeOrganization: (id: number) => void;
 };
@@ -32,10 +36,17 @@ export const useOrganizationStore = create<OrganizationStore>((set) => ({
     }
   },
 
-  addOrganization: (org) =>
-    set((state) => ({
-      organizations: [...state.organizations, org],
-    })),
+  addOrganization: async (name, active) => {
+    try {
+      const res = await postOrganization(name, active);
+      set((state) => ({
+        organizations: [...state.organizations, res],
+      }));
+      ``;
+    } catch (error) {
+      console.error("Error adding organization:", error);
+    }
+  },
 
   updateOrganization: (updatedOrg) =>
     set((state) => ({
@@ -44,8 +55,14 @@ export const useOrganizationStore = create<OrganizationStore>((set) => ({
       ),
     })),
 
-  removeOrganization: (id) =>
-    set((state) => ({
-      organizations: state.organizations.filter((org) => org.id !== id),
-    })),
+  removeOrganization: async (id) => {
+    try {
+      await deleteOrganizations(id);
+      set((state) => ({
+        organizations: state.organizations.filter((org) => org.id !== id),
+      }));
+    } catch (error) {
+      console.error("Error removing organization:", error);
+    }
+  },
 }));

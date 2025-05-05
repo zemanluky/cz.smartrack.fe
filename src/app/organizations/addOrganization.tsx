@@ -58,11 +58,7 @@ export function AddOrganization() {
   const onSubmit = (data: OrganizationFormValues) => {
     setIsSubmitting(true);
     try {
-      const newOrg = {
-        id: Date.now(), // temporary
-        ...data,
-      };
-      addOrganization(newOrg);
+      addOrganization(data.name, data.active);
       toast.success("Organization added successfully");
       form.reset();
       setIsOpen(false);
