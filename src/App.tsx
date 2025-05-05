@@ -38,41 +38,57 @@ export default function App() {
 
   return (
     <Router>
-      <Layout>
-        <Routes>
-          <Route
-            path="/"
-            element={
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/"
+          element={
+            <Layout>
               <ProtectedRoute element={<Placeholder title="Přehled" />} />
-            }
-          />
-          <Route
-            path="/dashboard"
-            element={
+            </Layout>
+          }
+        />
+        <Route
+          path="/dashboard"
+          element={
+            <Layout>
               <ProtectedRoute element={<Placeholder title="Přehled" />} />
-            }
-          />
-          <Route
-            path="/stock"
-            element={<ProtectedRoute element={<StockPage />} />}
-          />
-          <Route
-            path="/inventory"
-            element={
+            </Layout>
+          }
+        />
+        <Route
+          path="/stock"
+          element={
+            <Layout>
+              <ProtectedRoute element={<StockPage />} />
+            </Layout>
+          }
+        />
+        <Route
+          path="/inventory"
+          element={
+            <Layout>
               <ProtectedRoute element={<Placeholder title="Inventura" />} />
-            }
-          />
-          <Route
-            path="/reports"
-            element={<ProtectedRoute element={<ReportsPage />} />}
-          />
-          <Route
-            path="/organizations"
-            element={<ProtectedRoute element={<OrganizationsPage />} />}
-          />
-          <Route path="/login" element={<LoginPage />} />
-        </Routes>
-      </Layout>
+            </Layout>
+          }
+        />
+        <Route
+          path="/reports"
+          element={
+            <Layout>
+              <ProtectedRoute element={<ReportsPage />} />
+            </Layout>
+          }
+        />
+        <Route
+          path="/organizations"
+          element={
+            <Layout>
+              <ProtectedRoute element={<OrganizationsPage />} />
+            </Layout>
+          }
+        />
+      </Routes>
     </Router>
   );
 }
