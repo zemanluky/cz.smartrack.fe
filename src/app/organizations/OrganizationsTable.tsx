@@ -4,7 +4,7 @@ import {
   flexRender,
   ColumnDef,
 } from "@tanstack/react-table";
-import { useOrganizationStore } from "@/stores/organizationsStore";
+import { useOrganizationStore } from "@/lib/stores/organizationsStore";
 import { AddOrganization } from "./addOrganization";
 import {
   Table,
@@ -17,7 +17,7 @@ import {
 import { useEffect, useState } from "react";
 import {
   AlertDialog,
-  AlertDialogTrigger,
+  // AlertDialogTrigger,
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogFooter,
@@ -26,6 +26,8 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 type Organization = {
   id: number;
@@ -34,8 +36,9 @@ type Organization = {
 };
 
 export function OrganizationsTable() {
-  const { organizations, setOrganizations, removeOrganization } =
+  const { organizations, setOrganizations, removeOrganization, setSelectedOrganizationId } =
     useOrganizationStore();
+  const navigate = useNavigate();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedOrgId, setSelectedOrgId] = useState<number | null>(null);
@@ -72,15 +75,28 @@ export function OrganizationsTable() {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => (
-        <button
-          onClick={() => {
-            setSelectedOrgId(row.original.id);
-            setDialogOpen(true);
-          }}
-          className="text-red-500 hover:underline"
-        >
-          Delete
-        </button>
+        <div className="space-x-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setSelectedOrganizationId(String(row.original.id));
+              navigate("/dashboard");
+            }}
+          >
+            View Dashboard
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={() => {
+              setSelectedOrgId(row.original.id);
+              setDialogOpen(true);
+            }}
+          >
+            Delete
+          </Button>
+        </div>
       ),
     },
   ];

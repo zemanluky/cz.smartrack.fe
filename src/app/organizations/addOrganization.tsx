@@ -28,7 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useOrganizationStore } from "@/stores/organizationsStore";
+import { useOrganizationStore } from "@/lib/stores/organizationsStore";
 
 const organizationFormSchema = z.object({
   name: z

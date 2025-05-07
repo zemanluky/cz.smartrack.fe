@@ -1,26 +1,15 @@
 import { create } from "zustand";
-import { login, logout } from "../api/authApi";
-import { getUser } from "../api/userApi";
-
-type User = {
-  id: string;
-  name: string;
-  email: string;
-  organizationId: string;
-  role: "admin" | "owner" | "employee";
-};
+import { login, logout } from "@/api/authApi";
 
 type AuthState = {
-  user: User | null;
   token: string | null;
-  loginUser: (email: string, password: string) => Promise<boolean>;
+  loginUser: (email: string, password: string) => Promise<string | null>;
   logoutUser: () => void;
   restoreSession: () => void;
   isSessionRestored: boolean;
 };
 
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
   token: null,
   isSessionRestored: false,
 
@@ -30,12 +19,12 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (token) {
         localStorage.setItem("token", token);
         set({ token });
-        return true;
+        return token;
       }
-      return false;
+      return null;
     } catch (error) {
       console.error("Login failed", error);
-      return false;
+      return null;
     }
   },
 
@@ -46,22 +35,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (error) {
       console.error("Logout failed", error);
     }
-    set({ token: null });
-  },
-
-  getUser: async () => {
-    try {
-      const user = await getUser();
-      if (user) {
-        localStorage.setItem("user", user);
-        set({ user });
-        return true;
-      }
-      return false;
-    } catch (error) {
-      console.error("User fetch failed", error);
-      return false;
-    }
+    set({ token: null, isSessionRestored: false });
   },
 
   restoreSession: () => {

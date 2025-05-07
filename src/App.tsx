@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -9,7 +9,8 @@ import { Layout } from "./components/ui/layout";
 import StockPage from "@/app/stock/page";
 import ReportsPage from "@/app/reports/page";
 import OrganizationsPage from "./app/organizations/page";
-import { useAuthStore } from "./stores/authStore";
+import OrganizationDashboardPage from "./app/dashboard/page";
+import { useAuthStore } from "@/lib/stores/authStore";
 import LoginPage from "./app/login/page";
 
 const Placeholder = ({ title }: { title: string }) => (
@@ -22,19 +23,22 @@ const ProtectedRoute = ({ element }: { element: JSX.Element }) => {
 };
 
 export default function App() {
-  // const restoreSession = useAuthStore((state) => state.restoreSession);
-  // const isSessionRestored = useAuthStore((state) => state.isSessionRestored);
+  const restoreSession = useAuthStore((state) => state.restoreSession);
+  const isSessionRestored = useAuthStore((state) => state.isSessionRestored);
 
-  // useEffect(() => {
-  //   restoreSession();
-  // }, []);
+  useEffect(() => {
+    if (!isSessionRestored) {
+      restoreSession();
+    }
+  }, [isSessionRestored, restoreSession]);
 
-  // if (!isSessionRestored)
-  //   return (
-  //     <div className="flex items-center justify-center h-screen text-xl font-semibold">
-  //       Loading...
-  //     </div>
-  //   );
+  if (!isSessionRestored) {
+    return (
+      <div className="flex items-center justify-center h-screen text-xl font-semibold">
+        Initializing session...
+      </div>
+    );
+  }
 
   return (
     <Router>
@@ -52,7 +56,7 @@ export default function App() {
           path="/dashboard"
           element={
             <Layout>
-              <ProtectedRoute element={<Placeholder title="Přehled" />} />
+              <ProtectedRoute element={<OrganizationDashboardPage />} />
             </Layout>
           }
         />

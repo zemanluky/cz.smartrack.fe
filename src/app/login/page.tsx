@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuthStore } from "@/stores/authStore";
+import { useAuthStore } from "@/lib/stores/authStore";
+import { useUserStore } from "@/lib/stores/userStore";
+import { useOrganizationStore } from "@/lib/stores/organizationsStore";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,15 +12,59 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const loginUser = useAuthStore((state) => state.loginUser);
+  const token = useAuthStore((state) => state.token);
+  const isSessionRestored = useAuthStore((state) => state.isSessionRestored);
+  const fetchCurrentUser = useUserStore((state) => state.fetchCurrentUser);
+  const { currentUser } = useUserStore();
+  const setSelectedOrganizationId = useOrganizationStore((state) => state.setSelectedOrganizationId);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isSessionRestored) {
+      return;
+    }
+
+    if (token && currentUser) {
+      if (currentUser.role === "sys_admin") {
+        navigate("/organizations");
+      } else if (currentUser.role === "org_admin") {
+        if (currentUser.organizationId) {
+          setSelectedOrganizationId(String(currentUser.organizationId));
+        }
+        navigate("/dashboard");
+      }
+    }
+  }, [token, currentUser, navigate, isSessionRestored, setSelectedOrganizationId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     try {
-      const success = await loginUser(email, password);
-      if (success) {
-        navigate("/dashboard");
+      const token = await loginUser(email, password);
+      if (token) {
+        const userFetched = await fetchCurrentUser();
+        if (userFetched) {
+          const user = useUserStore.getState().currentUser;
+
+          if (user) {
+            if (user.role === "sys_admin") {
+              navigate("/organizations");
+            } else if (user.role === "org_admin") {
+              if (user.organizationId) {
+                setSelectedOrganizationId(String(user.organizationId));
+                navigate("/dashboard");
+              } else {
+                setError("Organization ID missing for org_admin.");
+              }
+            } else {
+              setError("Unknown user role.");
+            }
+          } else {
+            setError("Failed to retrieve user details after login.");
+          }
+        } else {
+          setError("Failed to fetch user details.");
+        }
       } else {
         setError("Invalid credentials.");
       }
