@@ -6,7 +6,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { Layout } from "./components/ui/layout";
-import StockPage from "@/app/stock/page";
+import StockPage from "@/app/products/page";
 import ReportsPage from "@/app/reports/page";
 import OrganizationsPage from "./app/organizations/page";
 import OrganizationDashboardPage from "./app/dashboard/page";
