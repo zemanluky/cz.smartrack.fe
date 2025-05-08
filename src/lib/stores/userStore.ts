@@ -2,14 +2,20 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { getUser as fetchUserApi } from "@/api/userApi"; // Assuming userApi.ts exports getUser
 
-export type UserRole = "sys_admin" | "org_admin"; // Adjusted roles
+export type UserRole = "sys_admin" | "org_admin" | "org_user";
+
+export type Organization = {
+  id: number;
+  name: string;
+  active: boolean;
+};
 
 export type User = {
-  id: string;
+  id: number;
   name: string;
   email: string;
   role: UserRole;
-  organizationId: string | null; // org_admin will have this, sys_admin might not initially
+  organization: Organization | null;
 };
 
 type UserState = {
@@ -21,21 +27,26 @@ type UserState = {
 
 export const useUserStore = create<UserState>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       currentUser: null,
       setCurrentUser: (user) => set({ currentUser: user }),
       fetchCurrentUser: async () => {
         try {
           const user = await fetchUserApi();
           if (user) {
-            // Map backend role to frontend UserRole if necessary
-            // For now, assuming backend role matches 'sys_admin' or 'org_admin'
+            // Map backend user to FE User type
             const mappedUser: User = {
               id: user.id,
-              name: user.name || user.username, // Adjust if backend field names differ
+              name: user.name, // If backend uses username, adjust here
               email: user.email,
-              role: user.role, // Ensure this matches UserRole type
-              organizationId: user.organizationId || null,
+              role: user.role,
+              organization: user.organization
+                ? {
+                    id: user.organization.id,
+                    name: user.organization.name,
+                    active: user.organization.active,
+                  }
+                : null,
             };
             set({ currentUser: mappedUser });
             return true;

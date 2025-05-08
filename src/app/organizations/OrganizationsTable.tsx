@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 type Organization = {
   id: number;
@@ -81,6 +82,7 @@ export function OrganizationsTable() {
             size="sm"
             onClick={() => {
               setSelectedOrganizationId(String(row.original.id));
+              toast.info('Switched to organization: ' + row.original.name);
               navigate("/dashboard");
             }}
           >

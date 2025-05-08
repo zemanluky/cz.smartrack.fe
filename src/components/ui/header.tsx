@@ -6,7 +6,7 @@ export const Header = () => {
   const currentUser = useUserStore((state) => state.currentUser);
   return (
     <header className="h-12 border-b px-6 flex items-center justify-between bg-white">
-      <Link to="/" className="text-lg font-semibold">
+      <Link to="/dashboard" className="text-lg font-semibold">
         Chytrý regál
       </Link>
       <div className="flex items-center space-x-2">

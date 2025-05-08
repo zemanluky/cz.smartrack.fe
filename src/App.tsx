@@ -1,3 +1,4 @@
+import type { JSX } from "react";
 import { useEffect } from "react";
 import {
   BrowserRouter as Router,
@@ -6,8 +7,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import { Layout } from "./components/ui/layout";
-import StockPage from "@/app/products/page";
-import ReportsPage from "@/app/reports/page";
+import ProductsPage from "@/app/products/page";
 import OrganizationsPage from "./app/organizations/page";
 import OrganizationDashboardPage from "./app/dashboard/page";
 import { useAuthStore } from "@/lib/stores/authStore";
@@ -61,10 +61,10 @@ export default function App() {
           }
         />
         <Route
-          path="/stock"
+          path="/products"
           element={
             <Layout>
-              <ProtectedRoute element={<StockPage />} />
+              <ProtectedRoute element={<ProductsPage />} />
             </Layout>
           }
         />
@@ -76,14 +76,7 @@ export default function App() {
             </Layout>
           }
         />
-        <Route
-          path="/reports"
-          element={
-            <Layout>
-              <ProtectedRoute element={<ReportsPage />} />
-            </Layout>
-          }
-        />
+
         <Route
           path="/organizations"
           element={

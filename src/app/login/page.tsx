@@ -28,8 +28,8 @@ const LoginPage = () => {
       if (currentUser.role === "sys_admin") {
         navigate("/organizations");
       } else if (currentUser.role === "org_admin") {
-        if (currentUser.organizationId) {
-          setSelectedOrganizationId(String(currentUser.organizationId));
+        if (currentUser.organization?.id) {
+          setSelectedOrganizationId(String(currentUser.organization.id));
         }
         navigate("/dashboard");
       }
@@ -50,8 +50,8 @@ const LoginPage = () => {
             if (user.role === "sys_admin") {
               navigate("/organizations");
             } else if (user.role === "org_admin") {
-              if (user.organizationId) {
-                setSelectedOrganizationId(String(user.organizationId));
+              if (user.organization?.id) {
+                setSelectedOrganizationId(String(user.organization.id));
                 navigate("/dashboard");
               } else {
                 setError("Organization ID missing for org_admin.");

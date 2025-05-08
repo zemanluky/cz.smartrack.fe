@@ -5,7 +5,7 @@ import { toast } from "sonner"
 
 // Updated interface with boolean flag for isScanning instead of using any
 interface NFCScannerProps {
-    setValue: any // Still using 'any' for setValue to bypass TypeScript issues
+    setValue: unknown // Still using 'any' for setValue to bypass TypeScript issues
     currentRow: number
     currentColumn: number
     isScanning?: boolean // Added boolean prop for scanning state

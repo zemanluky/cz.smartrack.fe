@@ -25,7 +25,7 @@ type OrganizationStore = {
 
 export const useOrganizationStore = create<OrganizationStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       organizations: [],
       selectedOrganizationId: null,
 
