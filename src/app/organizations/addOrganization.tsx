@@ -12,6 +12,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import {
   Form,
@@ -28,7 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useOrganizationStore } from "@/stores/organizationsStore";
+import { useOrganizationStore } from "@/lib/stores/organizationsStore";
 
 const organizationFormSchema = z.object({
   name: z
@@ -84,6 +85,7 @@ export function AddOrganization() {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add New Organization</DialogTitle>
+          <DialogDescription>Fill out the form to add a new organization. All fields are required.</DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

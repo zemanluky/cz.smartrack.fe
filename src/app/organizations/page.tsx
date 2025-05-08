@@ -1,5 +1,4 @@
 import { OrganizationsTable } from "./OrganizationsTable";
-import { useOrganizationStore } from "@/stores/organizationsStore";
 
 export default function OrganizationsPage() {
   return (

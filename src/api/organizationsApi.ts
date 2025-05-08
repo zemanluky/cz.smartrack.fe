@@ -8,7 +8,6 @@ export async function getOrganizations() {
 
   try {
     const { data } = await api.request(options);
-    console.log(data);
     return data;
   } catch (error) {
     console.error(error);
@@ -25,7 +24,6 @@ export async function postOrganization(name: string, active: boolean) {
 
   try {
     const { data } = await api.request(options);
-    console.log("postOrganization res:", data);
     return data;
   } catch (error) {
     console.error(error);

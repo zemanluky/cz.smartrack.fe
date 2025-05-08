@@ -1,27 +1,34 @@
 //lib/types/product.ts
+
+// --- Backend Aligned Types --- 
+
+/**
+ * Represents the structure of product data returned by the backend API.
+ * Based on cz.smartrack.be/src/model/product.model.ts -> productResponse
+ */
+// Strictly backend-aligned product types
+
+/**
+ * Product entity as returned by backend (productResponse)
+ */
 export interface Product {
-    id: number;
-    organization_id: number;
-    name: string;
-    price: number;
-    deleted_at: null | string;
+  id: number;
+  name: string;
+  price: number;
+  is_deleted: boolean;
+  organization_id?: number;
 }
 
-export interface ProductPosition {
-    shelf_id: number;
-    row: number;
-    column: number;
-    low_stock_threshold_percent: number;
-    max_current_product_capacity: number;
-    current_amount_percent: number;
-}
-export interface ProductWithPosition extends Product {
-    position: ProductPosition;
+/**
+ * Product creation/update payload (saveProductData)
+ */
+export interface ProductCreate {
+  name: string;
+  price: number;
+  organization_id?: number;
 }
 
-export interface AddProductFormData {
-    name: string;
-    price: number;
-    organization_id: number;
-}
+
+// FE-aligned type for product creation (matches backend saveProductData)
+
 
