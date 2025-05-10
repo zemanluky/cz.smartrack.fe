@@ -4,8 +4,7 @@ import {
   flexRender,
   ColumnDef,
 } from "@tanstack/react-table";
-import { useOrganizationStore } from "@/lib/stores/organizationsStore";
-import { AddOrganization } from "./addOrganization";
+import { useOrganizationUsersStore } from "@/lib/stores/organizationUsersStore";
 import {
   Table,
   TableBody,
@@ -17,7 +16,6 @@ import {
 import { useEffect, useState } from "react";
 import {
   AlertDialog,
-  // AlertDialogTrigger,
   AlertDialogContent,
   AlertDialogHeader,
   AlertDialogFooter,
@@ -26,55 +24,49 @@ import {
   AlertDialogCancel,
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { AddUser } from "./addUser";
 
-type Organization = {
-  id: number;
+type User = {
   name: string;
-  active: boolean;
+  email: string;
+  role: string;
 };
 
-export function OrganizationsTable() {
-  const {
-    organizations,
-    setOrganizations,
-    removeOrganization,
-    setSelectedOrganizationId,
-  } = useOrganizationStore();
-  const navigate = useNavigate();
+export function UsersTable() {
+  const { users, loading, fetchUsers } = useOrganizationUsersStore();
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedOrgId, setSelectedOrgId] = useState<number | null>(null);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   useEffect(() => {
-    setOrganizations();
+    fetchUsers();
   }, []);
 
   const confirmDelete = () => {
-    if (selectedOrgId !== null) {
-      removeOrganization(selectedOrgId);
+    if (selectedUser) {
+      toast.error(`User ${selectedUser.name} deleted.`);
       setDialogOpen(false);
-      setSelectedOrgId(null);
+      setSelectedUser(null);
     }
   };
 
-  const columns: ColumnDef<Organization>[] = [
-    {
-      accessorKey: "id",
-      header: "ID",
-      cell: (info) => info.getValue(),
-    },
+  const columns: ColumnDef<User>[] = [
     {
       accessorKey: "name",
       header: "Name",
       cell: (info) => info.getValue(),
     },
     {
-      accessorKey: "active",
-      header: "Active",
-      cell: (info) => (info.getValue() ? "✅" : "❌"),
+      accessorKey: "email",
+      header: "Email",
+      cell: (info) => info.getValue(),
+    },
+    {
+      accessorKey: "role",
+      header: "Role",
+      cell: (info) => info.getValue(),
     },
     {
       id: "actions",
@@ -85,18 +77,16 @@ export function OrganizationsTable() {
             variant="outline"
             size="sm"
             onClick={() => {
-              setSelectedOrganizationId(String(row.original.id));
-              toast.info("Switched to organization: " + row.original.name);
-              navigate("/dashboard");
+              toast.info(`Viewing user: ${row.original.name}`);
             }}
           >
-            View Dashboard
+            View
           </Button>
           <Button
             variant="destructive"
             size="sm"
             onClick={() => {
-              setSelectedOrgId(row.original.id);
+              setSelectedUser(row.original);
               setDialogOpen(true);
             }}
           >
@@ -108,7 +98,7 @@ export function OrganizationsTable() {
   ];
 
   const table = useReactTable({
-    data: organizations,
+    data: users,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -116,8 +106,8 @@ export function OrganizationsTable() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Organizations</h2>
-        <AddOrganization />
+        <h2 className="text-lg font-semibold">Users</h2>
+        <AddUser />
       </div>
 
       <div className="rounded-md border">
@@ -158,7 +148,7 @@ export function OrganizationsTable() {
                   colSpan={columns.length}
                   className="text-center h-24"
                 >
-                  No organizations found.
+                  No users found.
                 </TableCell>
               </TableRow>
             )}
@@ -171,7 +161,7 @@ export function OrganizationsTable() {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the organization.
+              This will permanently delete the user.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

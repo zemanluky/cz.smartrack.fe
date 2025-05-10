@@ -1,13 +1,11 @@
 import { useLocation, Link } from "react-router-dom";
-import { LayoutDashboard, Boxes } from "lucide-react";
+import { LayoutDashboard, Boxes, User, Building } from "lucide-react";
 
 const navItems = [
-
-  { label: "Organizace", to: "/organizations", icon: LayoutDashboard },
+  { label: "Organizace", to: "/organizations", icon: Building },
+  { label: "Uživatelé", to: "/users", icon: User },
   { label: "Přehled", to: "/dashboard", icon: LayoutDashboard },
   { label: "Produkty", to: "/products", icon: Boxes },
-
-
 ];
 
 export const Sidebar = () => {

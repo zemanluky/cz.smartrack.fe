@@ -12,6 +12,7 @@ import OrganizationsPage from "./app/organizations/page";
 import OrganizationDashboardPage from "./app/dashboard/page";
 import { useAuthStore } from "@/lib/stores/authStore";
 import LoginPage from "./app/login/page";
+import UsersPage from "./app/users/page";
 
 const Placeholder = ({ title }: { title: string }) => (
   <div className="text-2xl font-bold">{title}</div>
@@ -76,12 +77,19 @@ export default function App() {
             </Layout>
           }
         />
-
         <Route
           path="/organizations"
           element={
             <Layout>
               <ProtectedRoute element={<OrganizationsPage />} />
+            </Layout>
+          }
+        />
+        <Route
+          path="/users"
+          element={
+            <Layout>
+              <ProtectedRoute element={<UsersPage />} />
             </Layout>
           }
         />

@@ -29,43 +29,51 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useOrganizationStore } from "@/lib/stores/organizationsStore";
+import { useOrganizationUsersStore } from "@/lib/stores/organizationUsersStore";
 
-const organizationFormSchema = z.object({
+const userFormSchema = z.object({
   name: z
     .string()
     .min(2, "Name must be at least 2 characters")
     .max(32, "Name must be 32 characters or fewer"),
+  email: z.string().email("Invalid email address"),
+  role: z.string().min(2, "Role must be at least 2 characters"),
   active: z.boolean(),
 });
-type OrganizationFormValues = z.infer<typeof organizationFormSchema>;
 
-export function AddOrganization() {
+type UserFormValues = z.infer<typeof userFormSchema>;
+
+export function AddUser() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const addOrganization = useOrganizationStore(
-    (state) => state.addOrganization
-  );
+  // Zustand store actions
+  const addUser = useOrganizationUsersStore((state) => state.addUser);
 
-  const form = useForm<OrganizationFormValues>({
-    resolver: zodResolver(organizationFormSchema),
+  const form = useForm<UserFormValues>({
+    resolver: zodResolver(userFormSchema),
     defaultValues: {
       name: "",
+      email: "",
+      role: "User",
       active: true,
     },
   });
 
-  const onSubmit = (data: OrganizationFormValues) => {
+  const onSubmit = (data: UserFormValues) => {
     setIsSubmitting(true);
     try {
-      addOrganization(data.name, data.active);
-      toast.success("Organization added successfully");
+      addUser({
+        name: data.name,
+        email: data.email,
+        role: data.role,
+      });
+      toast.success("User added successfully");
       form.reset();
       setIsOpen(false);
     } catch (error) {
-      console.error("Error adding organization:", error);
-      toast.error("Failed to add organization");
+      console.error("Error adding user:", error);
+      toast.error("Failed to add user");
     } finally {
       setIsSubmitting(false);
     }
@@ -79,15 +87,14 @@ export function AddOrganization() {
           onClick={() => setIsOpen(true)}
         >
           <Plus className="h-4 w-4" />
-          Add Organization
+          Add User
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Organization</DialogTitle>
+          <DialogTitle>Add New User</DialogTitle>
           <DialogDescription>
-            Fill out the form to add a new organization. All fields are
-            required.
+            Fill out the form to add a new user. All fields are required.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -99,7 +106,36 @@ export function AddOrganization() {
                 <FormItem>
                   <FormLabel>Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Organization name" {...field} />
+                    <Input placeholder="User name" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input placeholder="User email" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="User role (e.g. Admin, User)"
+                      {...field}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -130,7 +166,7 @@ export function AddOrganization() {
               )}
             />
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Adding..." : "Add Organization"}
+              {isSubmitting ? "Adding..." : "Add User"}
             </Button>
           </form>
         </Form>

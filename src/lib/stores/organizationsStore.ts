@@ -83,7 +83,9 @@ export const useOrganizationStore = create<OrganizationStore>()(
     {
       name: "organization-storage",
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ selectedOrganizationId: state.selectedOrganizationId }),
+      partialize: (state) => ({
+        selectedOrganizationId: state.selectedOrganizationId,
+      }),
     }
   )
 );
