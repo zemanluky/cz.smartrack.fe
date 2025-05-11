@@ -1,7 +1,8 @@
-import { string } from "zod";
 import api from "./api";
 import { useOrganizationStore } from "@/lib/stores/organizationsStore";
-import { data } from "react-router-dom";
+import { useOrganizationUsersStore } from "@/lib/stores/organizationUsersStore";
+import { useUserStore } from "@/lib/stores/userStore";
+import { userInfo } from "os";
 
 interface Organization {
   id: number;
@@ -40,11 +41,26 @@ interface UsersResponse {
 export async function getUsersForOrganization(): Promise<
   UsersResponse | undefined
 > {
-  const options = {
-    method: "GET",
-    url: "/user/",
-    headers: { "Content-Type": "application/json" },
-  };
+  const currentUser = useUserStore.getState().currentUser;
+  let options;
+  if (currentUser?.role === "sys_admin") {
+    const selectedOrgId =
+      useOrganizationStore.getState().selectedOrganizationId;
+    options = {
+      method: "GET",
+      url: "/user/",
+      headers: {
+        "Content-Type": "application/json",
+        organization_id: selectedOrgId,
+      },
+    };
+  } else {
+    options = {
+      method: "GET",
+      url: "/user",
+      headers: { "Content-Type": "application/json" },
+    };
+  }
 
   try {
     const { data } = await api.request<UsersResponse>(options);

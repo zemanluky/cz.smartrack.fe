@@ -27,22 +27,41 @@ import {
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { AddUser } from "./addUser";
+import { useOrganizationStore } from "@/lib/stores/organizationsStore";
+import { useRequireOrganization } from "@/hooks/common/useRequireOrganization";
 
-type User = {
+// Define the User type
+interface User {
+  id: string;
   name: string;
   email: string;
   role: string;
-};
+}
 
 export function UsersTable() {
-  const { users, loading, fetchUsers } = useOrganizationUsersStore();
+  const { users, fetchUsers } = useOrganizationUsersStore();
+  const { selectedOrganizationId, organizations } = useOrganizationStore();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
+  const loadingOrRedirecting = useRequireOrganization({
+    includeOrgAdmin: true,
+  });
+
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    if (selectedOrganizationId) {
+      fetchUsers();
+    }
+  }, [selectedOrganizationId, fetchUsers]);
+
+  if (loadingOrRedirecting) {
+    return <div>Loading or redirecting...</div>;
+  }
+
+  const selectedOrg = organizations.find(
+    (o) => String(o.id) === selectedOrganizationId
+  );
 
   const confirmDelete = () => {
     if (selectedUser) {
@@ -56,17 +75,14 @@ export function UsersTable() {
     {
       accessorKey: "name",
       header: "Name",
-      cell: (info) => info.getValue(),
     },
     {
       accessorKey: "email",
       header: "Email",
-      cell: (info) => info.getValue(),
     },
     {
       accessorKey: "role",
       header: "Role",
-      cell: (info) => info.getValue(),
     },
     {
       id: "actions",
@@ -106,10 +122,9 @@ export function UsersTable() {
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Users</h2>
+        <h2 className="text-lg font-semibold">Users of {selectedOrg?.name}</h2>
         <AddUser />
       </div>
-
       <div className="rounded-md border">
         <Table>
           <TableHeader>

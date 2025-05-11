@@ -31,7 +31,6 @@ export const useOrganizationUsersStore = create<OrganizationUsersStore>()(
           set({ users: [], loading: false });
         }
       },
-
       addUser: async (user: User) => {
         try {
           const response = await postUserForOrganization(user);
