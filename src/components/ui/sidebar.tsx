@@ -31,9 +31,6 @@ const navItems = [
 ];
 
 export const Sidebar = () => {
-  const selectedOrganizationId = useOrganizationStore(
-    (state) => state.selectedOrganizationId
-  );
   const currentUser = useUserStore((state) => state.currentUser);
   const userRole = currentUser?.role;
 

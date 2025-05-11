@@ -1,7 +1,9 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { getUsersForOrganization } from "@/api/organizationUsersApi";
-import { postUserForOrganization } from "@/api/organizationUsersApi";
+import {
+  getUsersForOrganization,
+  postUserForOrganization,
+} from "@/api/organizationUsersApi";
 
 type User = {
   name: string;
