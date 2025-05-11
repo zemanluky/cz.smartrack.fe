@@ -13,6 +13,7 @@ type OrganizationUsersStore = {
   users: User[];
   loading: boolean;
   fetchUsers: () => Promise<void>;
+  addUser: (user: User) => Promise<void>;
 };
 
 export const useOrganizationUsersStore = create<OrganizationUsersStore>()(

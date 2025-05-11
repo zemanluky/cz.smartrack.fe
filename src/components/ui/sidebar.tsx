@@ -1,9 +1,7 @@
 import { useLocation, Link } from "react-router-dom";
 import { LayoutDashboard, Boxes, User, Building } from "lucide-react";
 import { useUserStore } from "@/lib/stores/userStore";
-
-const currentUser = useUserStore.getState().currentUser;
-const userRole = currentUser?.role;
+import { useOrganizationStore } from "@/lib/stores/organizationsStore";
 
 const navItems = [
   {
@@ -33,6 +31,12 @@ const navItems = [
 ];
 
 export const Sidebar = () => {
+  const selectedOrganizationId = useOrganizationStore(
+    (state) => state.selectedOrganizationId
+  );
+  const currentUser = useUserStore((state) => state.currentUser);
+  const userRole = currentUser?.role;
+
   const location = useLocation();
 
   if (!userRole) {

@@ -41,7 +41,8 @@ interface User {
 
 export function UsersTable() {
   const { users, fetchUsers } = useOrganizationUsersStore();
-  const { selectedOrganizationId, organizations } = useOrganizationStore();
+  const { selectedOrganizationId, organizations, setOrganizations } =
+    useOrganizationStore();
   const currentUser = useUserStore((state) => state.currentUser);
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -52,10 +53,18 @@ export function UsersTable() {
   });
 
   useEffect(() => {
+    if (organizations.length === 0) {
+      setOrganizations();
+    }
     if (selectedOrganizationId) {
       fetchUsers();
     }
-  }, [selectedOrganizationId]);
+  }, [
+    selectedOrganizationId,
+    fetchUsers,
+    organizations.length,
+    setOrganizations,
+  ]);
 
   if (loadingOrRedirecting) {
     return <div>Loading or redirecting...</div>;
@@ -128,7 +137,8 @@ export function UsersTable() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">Users of {selectedOrg?.name}</h2>
-        <AddUser />
+        {(currentUser?.role === "sys_admin" ||
+          currentUser?.role === "org_admin") && <AddUser />}
       </div>
       <div className="rounded-md border">
         <Table>

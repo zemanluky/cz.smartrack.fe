@@ -81,7 +81,9 @@ export async function postUserForOrganization(
     data: {
       name: user.name,
       email: user.email,
-      organization_id: useOrganizationStore.getState().selectedOrganizationId,
+      organization_id: Number(
+        useOrganizationStore.getState().selectedOrganizationId
+      ),
       role: user.role,
     },
   };

@@ -30,6 +30,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useOrganizationUsersStore } from "@/lib/stores/organizationUsersStore";
+import { useOrganizationStore } from "@/lib/stores/organizationsStore";
+import { useUserStore } from "@/lib/stores/userStore";
+
+type User = {
+  name: string;
+  email: string;
+  role: string;
+};
 
 const userFormSchema = z.object({
   name: z
@@ -46,8 +54,8 @@ type UserFormValues = z.infer<typeof userFormSchema>;
 export function AddUser() {
   const [isOpen, setIsOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Zustand store actions
+  const currentUser = useUserStore((state) => state.currentUser);
+  const userRole = currentUser?.role;
   const addUser = useOrganizationUsersStore((state) => state.addUser);
 
   const form = useForm<UserFormValues>({
@@ -63,11 +71,12 @@ export function AddUser() {
   const onSubmit = (data: UserFormValues) => {
     setIsSubmitting(true);
     try {
-      addUser({
+      const user: User = {
         name: data.name,
         email: data.email,
         role: data.role,
-      });
+      };
+      addUser(user);
       toast.success("User added successfully");
       form.reset();
       setIsOpen(false);
@@ -132,10 +141,25 @@ export function AddUser() {
                 <FormItem>
                   <FormLabel>Role</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="User role (e.g. Admin, User)"
-                      {...field}
-                    />
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {userRole === "sys_admin" && (
+                          <>
+                            <SelectItem value="sys_admin">
+                              System admin
+                            </SelectItem>
+                            <SelectItem value="org_admin">Org admin</SelectItem>
+                            <SelectItem value="org_user">User</SelectItem>
+                          </>
+                        )}
+                        {userRole === "org_admin" && (
+                          <SelectItem value="User">User</SelectItem>
+                        )}
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
