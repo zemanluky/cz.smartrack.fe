@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { AddUser } from "./addUser";
 import { useOrganizationStore } from "@/lib/stores/organizationsStore";
 import { useRequireOrganization } from "@/hooks/common/useRequireOrganization";
+import { useUserStore } from "@/lib/stores/userStore";
 
 // Define the User type
 interface User {
@@ -41,6 +42,7 @@ interface User {
 export function UsersTable() {
   const { users, fetchUsers } = useOrganizationUsersStore();
   const { selectedOrganizationId, organizations } = useOrganizationStore();
+  const currentUser = useUserStore((state) => state.currentUser);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -53,7 +55,7 @@ export function UsersTable() {
     if (selectedOrganizationId) {
       fetchUsers();
     }
-  }, [selectedOrganizationId, fetchUsers]);
+  }, [selectedOrganizationId]);
 
   if (loadingOrRedirecting) {
     return <div>Loading or redirecting...</div>;
@@ -98,16 +100,19 @@ export function UsersTable() {
           >
             View
           </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => {
-              setSelectedUser(row.original);
-              setDialogOpen(true);
-            }}
-          >
-            Delete
-          </Button>
+
+          {currentUser?.role === "sys_admin" && (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => {
+                setSelectedUser(row.original);
+                setDialogOpen(true);
+              }}
+            >
+              Delete
+            </Button>
+          )}
         </div>
       ),
     },
