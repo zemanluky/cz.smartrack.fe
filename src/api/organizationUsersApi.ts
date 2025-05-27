@@ -14,6 +14,16 @@ type User = {
   name: string;
   email: string;
   role: string;
+  active: boolean;
+  id: number;
+  organization: Organization;
+};
+
+type PostUser = {
+  name: string;
+  email: string;
+  role: string;
+  active: boolean;
 };
 
 interface responseUser {
@@ -22,6 +32,7 @@ interface responseUser {
   email: string;
   name: string;
   active: boolean;
+  id: number;
 }
 
 interface Metadata {
@@ -72,7 +83,7 @@ export async function getUsersForOrganization(): Promise<
 }
 
 export async function postUserForOrganization(
-  user: User
+  user: PostUser
 ): Promise<User | undefined> {
   const options = {
     method: "POST",
@@ -81,6 +92,7 @@ export async function postUserForOrganization(
     data: {
       name: user.name,
       email: user.email,
+      active: user.active,
       organization_id: Number(
         useOrganizationStore.getState().selectedOrganizationId
       ),
@@ -92,6 +104,21 @@ export async function postUserForOrganization(
     const { data } = await api.request<User>(options);
     console.log(data);
     return data;
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+export async function deleteUserForOrganization(
+  id: number
+): Promise<Response | undefined> {
+  const options = {
+    method: "DELETE",
+    url: `/user/${id}`,
+    headers: { "Content-Type": "application/json" },
+  };
+  try {
+    return await api.request(options);
   } catch (error) {
     console.error(error);
   }

@@ -63,12 +63,16 @@ export function AddUser() {
     defaultValues: {
       name: "",
       email: "",
-      role: "User",
+      role: "org_user",
       active: true,
     },
   });
 
   const onSubmit = (data: UserFormValues) => {
+    if (!data.name.trim() || !data.email.trim() || !data.role.trim()) {
+      toast.error("Name, email, and role are required.");
+      return;
+    }
     setIsSubmitting(true);
     try {
       const user: User = {
@@ -76,6 +80,7 @@ export function AddUser() {
         email: data.email,
         role: data.role,
       };
+      console.log("Adding user:", user);
       addUser(user);
       toast.success("User added successfully");
       form.reset();
@@ -148,15 +153,15 @@ export function AddUser() {
                       <SelectContent>
                         {userRole === "sys_admin" && (
                           <>
+                            <SelectItem value="org_user">User</SelectItem>
+                            <SelectItem value="org_admin">Org admin</SelectItem>
                             <SelectItem value="sys_admin">
                               System admin
                             </SelectItem>
-                            <SelectItem value="org_admin">Org admin</SelectItem>
-                            <SelectItem value="org_user">User</SelectItem>
                           </>
                         )}
                         {userRole === "org_admin" && (
-                          <SelectItem value="User">User</SelectItem>
+                          <SelectItem value="org_user">User</SelectItem>
                         )}
                       </SelectContent>
                     </Select>

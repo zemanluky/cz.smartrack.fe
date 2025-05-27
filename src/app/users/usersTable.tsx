@@ -40,7 +40,7 @@ interface User {
 }
 
 export function UsersTable() {
-  const { users, fetchUsers } = useOrganizationUsersStore();
+  const { users, fetchUsers, deleteUser } = useOrganizationUsersStore();
   const { selectedOrganizationId, organizations, setOrganizations } =
     useOrganizationStore();
   const currentUser = useUserStore((state) => state.currentUser);
@@ -59,6 +59,7 @@ export function UsersTable() {
     if (selectedOrganizationId) {
       fetchUsers();
     }
+    console.log(users);
   }, [
     selectedOrganizationId,
     fetchUsers,
@@ -76,6 +77,14 @@ export function UsersTable() {
 
   const confirmDelete = () => {
     if (selectedUser) {
+      deleteUser(Number(selectedUser.id))
+        .then(() => {
+          toast.success(`User ${selectedUser.name} deleted successfully.`);
+        })
+        .catch((error) => {
+          console.error("Error deleting user:", error);
+          toast.error(`Failed to delete user ${selectedUser.name}.`);
+        });
       toast.error(`User ${selectedUser.name} deleted.`);
       setDialogOpen(false);
       setSelectedUser(null);
