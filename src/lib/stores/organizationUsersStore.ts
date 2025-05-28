@@ -47,6 +47,7 @@ type OrganizationUsersStore = {
   fetchUsers: (page: number) => Promise<UserListResponse | undefined>;
   addUser: (user: PostUser) => Promise<void>;
   deleteUser: (id: number) => Promise<void>;
+  editUser: (id: number, updatedUser: Partial<User>) => void;
 };
 
 export const useOrganizationUsersStore = create<OrganizationUsersStore>()(
@@ -89,6 +90,13 @@ export const useOrganizationUsersStore = create<OrganizationUsersStore>()(
         } catch (error) {
           console.error("Failed to delete user:", error);
         }
+      },
+      editUser: async (id: number, updatedUser: Partial<User>) => {
+        set((state) => ({
+          users: state.users.map((user) =>
+            user.id === id ? { ...user, ...updatedUser } : user
+          ),
+        }));
       },
     }),
     {

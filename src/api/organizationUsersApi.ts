@@ -51,7 +51,7 @@ interface UsersResponse {
 
 export async function getUsersForOrganization(
   page: number = 1,
-  limit: number = 5
+  limit: number = 25
 ): Promise<UsersResponse | undefined> {
   const currentUser = useUserStore.getState().currentUser;
 
@@ -61,7 +61,7 @@ export async function getUsersForOrganization(
       useOrganizationStore.getState().selectedOrganizationId
     );
     console.log("Selected Organization ID:", selectedOrgId);
-    url = `/user/?page=${page}&limit=${limit}`;
+    url = `/user/?page=${page}&limit=${limit}&organization_id=${selectedOrgId}`;
   } else {
     url = `/user/?page=${page}&limit=${limit}`;
   }

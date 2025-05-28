@@ -26,11 +26,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { AddUser } from "./addUser";
 import { useOrganizationStore } from "@/lib/stores/organizationsStore";
 import { useRequireOrganization } from "@/hooks/common/useRequireOrganization";
 import { useUserStore } from "@/lib/stores/userStore";
-import { number } from "zod";
+import { UserFormDialog } from "./userFormDialog";
+import { Plus } from "lucide-react";
+import { set } from "react-hook-form";
 
 interface User {
   id: string;
@@ -40,15 +41,23 @@ interface User {
 }
 
 export function UsersTable() {
-  const { users, fetchUsers, deleteUser } = useOrganizationUsersStore();
+  const { users, fetchUsers, deleteUser, addUser, editUser } =
+    useOrganizationUsersStore();
   const { selectedOrganizationId, organizations, setOrganizations } =
     useOrganizationStore();
   const currentUser = useUserStore((state) => state.currentUser);
+
   const [page, setPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [activateDialogOpen, setActivateDialogOpen] = useState(false);
+
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  const [addOpen, setAddOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [userToEdit, setUserToEdit] = useState<User | null>(null);
 
   const loadingOrRedirecting = useRequireOrganization({
     includeOrgAdmin: true,
@@ -62,7 +71,6 @@ export function UsersTable() {
     if (selectedOrganizationId) {
       fetchUsers(page).then((data) => {
         setHasNextPage(data?.metadata?.has_next_page ?? false);
-        console.log(hasNextPage, "hasNextPage");
       });
     }
   }, [
@@ -91,10 +99,29 @@ export function UsersTable() {
           console.error("Error deleting user:", error);
           toast.error(`Failed to delete user ${selectedUser.name}.`);
         });
-      toast.error(`User ${selectedUser.name} deleted.`);
       setDialogOpen(false);
       setSelectedUser(null);
     }
+  };
+  const confirmActivate = () => {
+    if (selectedUser) {
+      // deleteUser(Number(selectedUser.id))
+      //   .then(() => {
+      //     toast.success(`User ${selectedUser.name} deleted successfully.`);
+      //   })
+      // .catch((error) => {
+      //   console.error("Error deleting user:", error);
+      //   toast.error(`Failed to delete user ${selectedUser.name}.`);
+      // });
+      toast.success(`User ${selectedUser.name} activated successfully.`);
+      setDialogOpen(false);
+      setSelectedUser(null);
+    }
+  };
+
+  const onEditUser = (user: User) => {
+    setUserToEdit(user);
+    setEditOpen(true);
   };
 
   const columns: ColumnDef<User>[] = [
@@ -115,28 +142,40 @@ export function UsersTable() {
       header: "Actions",
       cell: ({ row }) => (
         <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              toast.info(`Viewing user: ${row.original.name}`);
-            }}
-          >
-            View
-          </Button>
-
-          {currentUser?.role === "sys_admin" && (
+          {(currentUser?.role === "sys_admin" ||
+            currentUser?.role === "org_admin") && (
             <Button
-              variant="destructive"
+              variant="outline"
               size="sm"
-              onClick={() => {
-                setSelectedUser(row.original);
-                setDialogOpen(true);
-              }}
+              onClick={() => onEditUser(row.original)}
             >
-              Delete
+              Edit
             </Button>
           )}
+          {currentUser?.role === "sys_admin" &&
+            (row.original.active ? (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => {
+                  setSelectedUser(row.original);
+                  setDialogOpen(true);
+                }}
+              >
+                Delete
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSelectedUser(row.original);
+                  setActivateDialogOpen(true);
+                }}
+              >
+                Activate
+              </Button>
+            ))}
         </div>
       ),
     },
@@ -156,8 +195,17 @@ export function UsersTable() {
             Users of {selectedOrg?.name}
           </h2>
           {(currentUser?.role === "sys_admin" ||
-            currentUser?.role === "org_admin") && <AddUser />}
+            currentUser?.role === "org_admin") && (
+            <Button
+              className="flex items-center gap-2"
+              onClick={() => setAddOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              Add User
+            </Button>
+          )}
         </div>
+
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -204,6 +252,7 @@ export function UsersTable() {
           </Table>
         </div>
 
+        {/* Alert dialog for deletion */}
         <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
@@ -220,7 +269,28 @@ export function UsersTable() {
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>
+        <AlertDialog
+          open={activateDialogOpen}
+          onOpenChange={setActivateDialogOpen}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will activate the user.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmActivate}>
+                Activate
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
+
+      {/* Pagination */}
       <div className="flex justify-between items-center mt-4">
         <Button
           variant="outline"
@@ -238,6 +308,30 @@ export function UsersTable() {
           Next
         </Button>
       </div>
+
+      {/* Add User Dialog */}
+      <UserFormDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        onSubmit={async (data) => {
+          await addUser(data);
+          setAddOpen(false);
+        }}
+      />
+
+      {/* Edit User Dialog */}
+      <UserFormDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        initialData={userToEdit || undefined}
+        onSubmit={async (data) => {
+          if (userToEdit) {
+            await editUser(Number(userToEdit.id), data);
+            setEditOpen(false);
+            setUserToEdit(null);
+          }
+        }}
+      />
     </>
   );
 }
