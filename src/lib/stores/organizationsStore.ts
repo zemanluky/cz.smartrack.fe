@@ -6,7 +6,7 @@ import {
   deleteOrganizations,
 } from "@/api/organizationsApi";
 
-type Organization = {
+export type Organization = {
   id: number;
   name: string;
   active: boolean;

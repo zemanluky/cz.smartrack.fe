@@ -4,7 +4,7 @@ import {
   flexRender,
   ColumnDef,
 } from "@tanstack/react-table";
-import { useOrganizationStore } from "@/lib/stores/organizationsStore";
+import { useOrganizationStore, type Organization } from "@/lib/stores/organizationsStore"; // Import Organization type
 import { AddOrganization } from "./addOrganization";
 import {
   Table,
@@ -28,12 +28,45 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { toast } from "sonner";
 
-type Organization = {
-  id: number;
-  name: string;
-  active: boolean;
+// Define the OrganizationCardItem component
+interface OrganizationCardItemProps {
+  organization: Organization;
+  onViewDashboard: (organization: Organization) => void;
+  onDelete: (organization: Organization) => void;
+}
+
+const OrganizationCardItem = ({ organization, onViewDashboard, onDelete }: OrganizationCardItemProps) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="break-words">{organization.name}</CardTitle>
+        <CardDescription className="break-words">ID: {organization.id}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <p className={`text-sm font-medium break-words ${organization.active ? 'text-green-600' : 'text-red-600'}`}>
+          Status: {organization.active ? "Active" : "Inactive"}
+        </p>
+      </CardContent>
+      <CardFooter className="flex flex-col space-y-2 pt-4 sm:flex-row sm:space-y-0 sm:justify-end sm:space-x-2 sm:items-center">
+        <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => onViewDashboard(organization)}>
+          View Dashboard
+        </Button>
+        <Button variant="destructive" size="sm" className="w-full sm:w-auto" onClick={() => onDelete(organization)}>
+          Delete
+        </Button>
+      </CardFooter>
+    </Card>
+  );
 };
 
 export function OrganizationsTable() {
@@ -120,7 +153,8 @@ export function OrganizationsTable() {
         <AddOrganization />
       </div>
 
-      <div className="rounded-md border">
+      {/* Desktop Table View */}
+      <div className="hidden md:block rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -164,6 +198,31 @@ export function OrganizationsTable() {
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="block md:hidden space-y-3">
+        {organizations.length > 0 ? (
+          organizations.map((org) => (
+            <OrganizationCardItem
+              key={org.id}
+              organization={org}
+              onViewDashboard={(organizationToView) => {
+                setSelectedOrganizationId(String(organizationToView.id));
+                toast.info("Switched to organization: " + organizationToView.name);
+                navigate("/dashboard");
+              }}
+              onDelete={(organizationToDelete) => {
+                setSelectedOrgId(organizationToDelete.id);
+                setDialogOpen(true);
+              }}
+            />
+          ))
+        ) : (
+          <div className="text-center text-muted-foreground p-4 border rounded-md">
+            No organizations found.
+          </div>
+        )}
       </div>
 
       <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>

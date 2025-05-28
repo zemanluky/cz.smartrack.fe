@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { login, logout } from "@/api/authApi";
+import { useUserStore } from "./userStore"; // Import userStore
 
 type AuthState = {
   token: string | null;
@@ -19,6 +20,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       if (token) {
         localStorage.setItem("token", token);
         set({ token });
+        useUserStore.getState().fetchCurrentUser(); // Fetch user data
         return token;
       }
       return null;
@@ -35,6 +37,7 @@ export const useAuthStore = create<AuthState>((set) => ({
     } catch (error) {
       console.error("Logout failed", error);
     }
+    useUserStore.getState().clearCurrentUser(); // Clear user data
     set({ token: null, isSessionRestored: false });
   },
 
@@ -45,6 +48,11 @@ export const useAuthStore = create<AuthState>((set) => ({
       set({
         token: storedToken,
       });
+      useUserStore.getState().fetchCurrentUser(); // Fetch user data on session restore
+    } else {
+      // If no token, ensure user is cleared and considered 'loaded' (as there's no user to load)
+      useUserStore.getState().clearCurrentUser(); 
+      useUserStore.getState().setIsUserLoaded(true); // Explicitly set isUserLoaded if no token
     }
     set({ isSessionRestored: true });
   },

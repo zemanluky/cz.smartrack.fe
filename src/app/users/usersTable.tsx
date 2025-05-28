@@ -4,7 +4,7 @@ import {
   flexRender,
   ColumnDef,
 } from "@tanstack/react-table";
-import { useOrganizationUsersStore } from "@/lib/stores/organizationUsersStore";
+import { useOrganizationUsersStore, type User } from "@/lib/stores/organizationUsersStore"; // Import User type
 import {
   Table,
   TableBody,
@@ -25,19 +25,51 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { toast } from "sonner";
 import { AddUser } from "./addUser";
 import { useOrganizationStore } from "@/lib/stores/organizationsStore";
 import { useRequireOrganization } from "@/hooks/common/useRequireOrganization";
 import { useUserStore } from "@/lib/stores/userStore";
 
-// Define the User type
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  role: string;
+// Define the UserCardItem component
+interface UserCardItemProps {
+  user: User;
+  onView: (user: User) => void;
+  onDelete: (user: User) => void;
+  currentUserRole?: string;
 }
+
+const UserCardItem = ({ user, onView, onDelete, currentUserRole }: UserCardItemProps) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="break-words">{user.name}</CardTitle>
+        <CardDescription className="break-words">{user.email}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground break-words">Role: {user.role}</p>
+      </CardContent>
+      <CardFooter className="flex flex-col space-y-2 pt-4 sm:flex-row sm:space-y-0 sm:justify-end sm:space-x-2 sm:items-center">
+        <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => onView(user)}>
+          View
+        </Button>
+        {(currentUserRole === "sys_admin") && (
+          <Button variant="destructive" size="sm" className="w-full sm:w-auto" onClick={() => onDelete(user)}>
+            Delete
+          </Button>
+        )}
+      </CardFooter>
+    </Card>
+  );
+};
 
 export function UsersTable() {
   const { users, fetchUsers, deleteUser } = useOrganizationUsersStore();
@@ -77,7 +109,7 @@ export function UsersTable() {
 
   const confirmDelete = () => {
     if (selectedUser) {
-      deleteUser(Number(selectedUser.id))
+      deleteUser(selectedUser.id)
         .then(() => {
           toast.success(`User ${selectedUser.name} deleted successfully.`);
         })
@@ -149,7 +181,8 @@ export function UsersTable() {
         {(currentUser?.role === "sys_admin" ||
           currentUser?.role === "org_admin") && <AddUser />}
       </div>
-      <div className="rounded-md border">
+      {/* Desktop Table View */}
+      <div className="hidden md:block rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -193,6 +226,28 @@ export function UsersTable() {
             )}
           </TableBody>
         </Table>
+      </div>
+
+      {/* Mobile Card View */}
+      <div className="block md:hidden space-y-3">
+        {users.length > 0 ? (
+          users.map((user) => (
+            <UserCardItem
+              key={user.id}
+              user={user}
+              onView={(userToView) => toast.info(`Viewing user: ${userToView.name}`)}
+              onDelete={(userToDelete) => {
+                setSelectedUser(userToDelete);
+                setDialogOpen(true);
+              }}
+              currentUserRole={currentUser?.role}
+            />
+          ))
+        ) : (
+          <div className="text-center text-muted-foreground p-4 border rounded-md">
+            No users found.
+          </div>
+        )}
       </div>
 
       <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>

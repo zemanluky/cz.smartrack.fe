@@ -53,39 +53,41 @@ const form = useForm<z.infer<typeof productCreateSchema>>({
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input {...field} autoFocus />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Price</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" {...field} value={field.value ?? ''} onChange={e => {
-  const val = e.target.value;
-  field.onChange(val === '' ? undefined : Number(val));
-}} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {/* Explicitly type FormField for robust type inference */}
+<FormField<z.infer<typeof productCreateSchema>, "name">
+  control={form.control}
+  name="name"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Name</FormLabel>
+      <FormControl>
+        <Input {...field} autoFocus />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
+            <FormField<z.infer<typeof productCreateSchema>, "price">
+  control={form.control}
+  name="price"
+  render={({ field }) => (
+    <FormItem>
+      <FormLabel>Price</FormLabel>
+      <FormControl>
+        <Input type="number" step="0.01" {...field} value={field.value ?? ''} onChange={e => {
+          const val = e.target.value;
+          field.onChange(val === '' ? undefined : Number(val));
+        }} />
+      </FormControl>
+      <FormMessage />
+    </FormItem>
+  )}
+/>
 
             {/* Show organization info if available */}
             {(() => {
-              const user = useUserStore.getState().currentUser;
+              // Use Zustand selector for proper reactivity
+              const user = useUserStore(state => state.currentUser);
               const org = user?.organization;
               if (user?.role === 'sys_admin') {
                 return org ? (

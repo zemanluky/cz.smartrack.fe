@@ -20,15 +20,18 @@ export type User = {
 
 type UserState = {
   currentUser: User | null;
+  isUserLoaded: boolean; // Added to track if user fetch attempt has completed
   setCurrentUser: (user: User | null) => void;
   fetchCurrentUser: () => Promise<boolean>;
   clearCurrentUser: () => void;
+  setIsUserLoaded: (loaded: boolean) => void; // Action to explicitly set isUserLoaded
 };
 
 export const useUserStore = create<UserState>()(
   persist(
     (set) => ({
       currentUser: null,
+      isUserLoaded: false, // Initialize isUserLoaded
       setCurrentUser: (user) => set({ currentUser: user }),
       fetchCurrentUser: async () => {
         try {
@@ -57,9 +60,12 @@ export const useUserStore = create<UserState>()(
           console.error("Failed to fetch current user:", error);
           set({ currentUser: null });
           return false;
+        } finally {
+          set({ isUserLoaded: true }); // Set isUserLoaded to true after fetch attempt
         }
       },
-      clearCurrentUser: () => set({ currentUser: null }),
+      clearCurrentUser: () => set({ currentUser: null, isUserLoaded: false }), // Reset isUserLoaded on clear
+      setIsUserLoaded: (loaded) => set({ isUserLoaded: loaded }),
     }),
     {
       name: "user-storage", // name of the item in the storage (must be unique)

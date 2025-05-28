@@ -6,7 +6,7 @@ import {
   deleteUserForOrganization,
 } from "@/api/organizationUsersApi";
 
-type User = {
+export type User = {
   name: string;
   email: string;
   role: string;
