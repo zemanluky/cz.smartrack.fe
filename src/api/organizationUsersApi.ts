@@ -49,29 +49,30 @@ interface UsersResponse {
   items: responseUser[];
 }
 
-export async function getUsersForOrganization(): Promise<
-  UsersResponse | undefined
-> {
+export async function getUsersForOrganization(
+  page: number = 1,
+  limit: number = 5
+): Promise<UsersResponse | undefined> {
   const currentUser = useUserStore.getState().currentUser;
-  let options;
+
+  let url;
   if (currentUser?.role === "sys_admin") {
-    const selectedOrgId =
-      useOrganizationStore.getState().selectedOrganizationId;
-    options = {
-      method: "GET",
-      url: "/user/",
-      headers: {
-        "Content-Type": "application/json",
-        organization_id: selectedOrgId,
-      },
-    };
+    const selectedOrgId = Number(
+      useOrganizationStore.getState().selectedOrganizationId
+    );
+    console.log("Selected Organization ID:", selectedOrgId);
+    url = `/user/?page=${page}&limit=${limit}`;
   } else {
-    options = {
-      method: "GET",
-      url: "/user",
-      headers: { "Content-Type": "application/json" },
-    };
+    url = `/user/?page=${page}&limit=${limit}`;
   }
+
+  const options = {
+    method: "GET",
+    url,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
 
   try {
     const { data } = await api.request<UsersResponse>(options);
@@ -99,7 +100,6 @@ export async function postUserForOrganization(
       role: user.role,
     },
   };
-  console.log(options.data);
   try {
     const { data } = await api.request<User>(options);
     console.log(data);

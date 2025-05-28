@@ -5,6 +5,7 @@ import {
   postUserForOrganization,
   deleteUserForOrganization,
 } from "@/api/organizationUsersApi";
+import { number } from "zod";
 
 type User = {
   name: string;
@@ -19,6 +20,20 @@ type User = {
   };
 };
 
+type Metadata = {
+  page: number;
+  limit: number;
+  current_offset: number;
+  has_next_page: boolean;
+  total_results: number;
+  filtered_total_results: number;
+};
+
+type UserListResponse = {
+  metadata: Metadata;
+  items: User[];
+};
+
 type PostUser = {
   name: string;
   email: string;
@@ -29,8 +44,8 @@ type PostUser = {
 type OrganizationUsersStore = {
   users: User[];
   loading: boolean;
-  fetchUsers: () => Promise<void>;
-  addUser: (user: User) => Promise<void>;
+  fetchUsers: (page: number) => Promise<UserListResponse | undefined>;
+  addUser: (user: PostUser) => Promise<void>;
   deleteUser: (id: number) => Promise<void>;
 };
 
@@ -40,11 +55,12 @@ export const useOrganizationUsersStore = create<OrganizationUsersStore>()(
       users: [],
       loading: false,
 
-      fetchUsers: async () => {
+      fetchUsers: async (page: number) => {
         set({ loading: true });
         try {
-          const response = await getUsersForOrganization();
+          const response = await getUsersForOrganization(page);
           set({ users: response?.items, loading: false });
+          return response;
         } catch (error) {
           console.error("Failed to fetch users:", error);
           set({ users: [], loading: false });

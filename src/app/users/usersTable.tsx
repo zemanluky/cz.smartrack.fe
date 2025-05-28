@@ -30,8 +30,8 @@ import { AddUser } from "./addUser";
 import { useOrganizationStore } from "@/lib/stores/organizationsStore";
 import { useRequireOrganization } from "@/hooks/common/useRequireOrganization";
 import { useUserStore } from "@/lib/stores/userStore";
+import { number } from "zod";
 
-// Define the User type
 interface User {
   id: string;
   name: string;
@@ -44,6 +44,8 @@ export function UsersTable() {
   const { selectedOrganizationId, organizations, setOrganizations } =
     useOrganizationStore();
   const currentUser = useUserStore((state) => state.currentUser);
+  const [page, setPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -56,12 +58,16 @@ export function UsersTable() {
     if (organizations.length === 0) {
       setOrganizations();
     }
+
     if (selectedOrganizationId) {
-      fetchUsers();
+      fetchUsers(page).then((data) => {
+        setHasNextPage(data?.metadata?.has_next_page ?? false);
+        console.log(hasNextPage, "hasNextPage");
+      });
     }
-    console.log(users);
   }, [
     selectedOrganizationId,
+    page,
     fetchUsers,
     organizations.length,
     setOrganizations,
@@ -143,74 +149,95 @@ export function UsersTable() {
   });
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Users of {selectedOrg?.name}</h2>
-        {(currentUser?.role === "sys_admin" ||
-          currentUser?.role === "org_admin") && <AddUser />}
-      </div>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
+    <>
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold">
+            Users of {selectedOrg?.name}
+          </h2>
+          {(currentUser?.role === "sys_admin" ||
+            currentUser?.role === "org_admin") && <AddUser />}
+        </div>
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="text-center h-24"
-                >
-                  No users found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="text-center h-24"
+                  >
+                    No users found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
 
-      <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the user.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete}>
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+        <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete the user.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDelete}>
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+      <div className="flex justify-between items-center mt-4">
+        <Button
+          variant="outline"
+          disabled={page === 1}
+          onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+        >
+          Previous
+        </Button>
+        <span>Page {page}</span>
+        <Button
+          variant="outline"
+          disabled={!hasNextPage}
+          onClick={() => setPage((prev) => prev + 1)}
+        >
+          Next
+        </Button>
+      </div>
+    </>
   );
 }

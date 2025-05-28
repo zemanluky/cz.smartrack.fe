@@ -37,6 +37,7 @@ type User = {
   name: string;
   email: string;
   role: string;
+  active: boolean;
 };
 
 const userFormSchema = z.object({
@@ -79,6 +80,7 @@ export function AddUser() {
         name: data.name,
         email: data.email,
         role: data.role,
+        active: data.active,
       };
       console.log("Adding user:", user);
       addUser(user);
