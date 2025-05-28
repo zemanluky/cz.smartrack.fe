@@ -140,61 +140,75 @@ export function UserFormDialog({
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="role"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role</FormLabel>
-                  <FormControl>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {userRole === "sys_admin" && (
-                          <>
-                            <SelectItem value="org_user">User</SelectItem>
-                            <SelectItem value="org_admin">Org admin</SelectItem>
-                            <SelectItem value="sys_admin">
-                              System admin
-                            </SelectItem>
-                          </>
-                        )}
-                        {userRole === "org_admin" && (
-                          <SelectItem value="org_user">User</SelectItem>
-                        )}
-                      </SelectContent>
-                    </Select>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="active"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Status</FormLabel>
-                  <Select
-                    value={field.value ? "true" : "false"}
-                    onValueChange={(val) => field.onChange(val === "true")}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      <SelectItem value="true">Active</SelectItem>
-                      <SelectItem value="false">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            {(userRole === "sys_admin" || userRole === "org_admin") && (
+              <>
+                <FormField
+                  control={form.control}
+                  name="role"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Role</FormLabel>
+                      <FormControl>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                        >
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a role" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {userRole === "sys_admin" && (
+                              <>
+                                <SelectItem value="org_user">User</SelectItem>
+                                <SelectItem value="org_admin">
+                                  Org admin
+                                </SelectItem>
+                                <SelectItem value="sys_admin">
+                                  System admin
+                                </SelectItem>
+                              </>
+                            )}
+                            {userRole === "org_admin" && (
+                              <>
+                                <SelectItem value="org_user">User</SelectItem>
+                                <SelectItem value="org_admin">
+                                  Org admin
+                                </SelectItem>
+                              </>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="active"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status</FormLabel>
+                      <Select
+                        value={field.value ? "true" : "false"}
+                        onValueChange={(val) => field.onChange(val === "true")}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="true">Active</SelectItem>
+                          <SelectItem value="false">Inactive</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </>
+            )}
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting
                 ? isEditMode

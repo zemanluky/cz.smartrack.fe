@@ -51,10 +51,10 @@ export function UsersTable() {
   const [page, setPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
 
-  const [dialogOpen, setDialogOpen] = useState(false);
+  // const [dialogOpen, setDialogOpen] = useState(false);
   // const [activateDialogOpen, setActivateDialogOpen] = useState(false);
 
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  // const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -154,13 +154,26 @@ export function UsersTable() {
       header: "Actions",
       cell: ({ row }) => (
         <div className="space-x-2">
-          {(currentUser?.role === "sys_admin" ||
-            currentUser?.role === "org_admin") && (
+          {currentUser?.role === "sys_admin" ||
+          currentUser?.role === "org_admin" ? (
             <Button
               variant="outline"
               size="sm"
               onClick={() => onEditUser(row.original)}
             >
+              Edit
+            </Button>
+          ) : currentUser?.role === "org_user" &&
+            currentUser?.id === row.original.id ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onEditUser(row.original)}
+            >
+              Edit
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" disabled>
               Edit
             </Button>
           )}
@@ -200,7 +213,7 @@ export function UsersTable() {
   });
 
   return (
-    <>
+    <div className="size-full p-4">
       <div className="space-y-4">
         <div className="flex justify-between items-center">
           <h2 className="text-lg font-semibold">
@@ -348,6 +361,6 @@ export function UsersTable() {
           }
         }}
       />
-    </>
+    </div>
   );
 }
