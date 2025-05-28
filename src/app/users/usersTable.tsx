@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -31,18 +31,19 @@ import { useRequireOrganization } from "@/hooks/common/useRequireOrganization";
 import { useUserStore } from "@/lib/stores/userStore";
 import { UserFormDialog } from "./userFormDialog";
 import { Plus } from "lucide-react";
-import { set } from "react-hook-form";
 
 interface User {
-  id: string;
+  id: number;
   name: string;
   email: string;
   role: string;
+  active: boolean;
 }
 
 export function UsersTable() {
-  const { users, fetchUsers, deleteUser, addUser, editUser } =
-    useOrganizationUsersStore();
+  const { users, fetchUsers, addUser, editUser } = useOrganizationUsersStore();
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+
   const { selectedOrganizationId, organizations, setOrganizations } =
     useOrganizationStore();
   const currentUser = useUserStore((state) => state.currentUser);
@@ -51,7 +52,7 @@ export function UsersTable() {
   const [hasNextPage, setHasNextPage] = useState(false);
 
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [activateDialogOpen, setActivateDialogOpen] = useState(false);
+  // const [activateDialogOpen, setActivateDialogOpen] = useState(false);
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
@@ -64,22 +65,27 @@ export function UsersTable() {
   });
 
   useEffect(() => {
-    if (organizations.length === 0) {
-      setOrganizations();
-    }
-
     if (selectedOrganizationId) {
       fetchUsers(page).then((data) => {
         setHasNextPage(data?.metadata?.has_next_page ?? false);
       });
     }
-  }, [
-    selectedOrganizationId,
-    page,
-    fetchUsers,
-    organizations.length,
-    setOrganizations,
-  ]);
+  }, [selectedOrganizationId, page, fetchUsers]);
+
+  useEffect(() => {
+    if (organizations.length === 0) {
+      setOrganizations();
+    }
+  }, [organizations.length, setOrganizations]);
+
+  useEffect(() => {
+    if (!users) return;
+    if (currentUser?.role !== "sys_admin") {
+      setFilteredUsers(users.filter((user) => user.active));
+    } else {
+      setFilteredUsers(users);
+    }
+  }, [users, currentUser?.role]);
 
   if (loadingOrRedirecting) {
     return <div>Loading or redirecting...</div>;
@@ -89,39 +95,40 @@ export function UsersTable() {
     (o) => String(o.id) === selectedOrganizationId
   );
 
-  const confirmDelete = () => {
-    if (selectedUser) {
-      deleteUser(Number(selectedUser.id))
-        .then(() => {
-          toast.success(`User ${selectedUser.name} deleted successfully.`);
-        })
-        .catch((error) => {
-          console.error("Error deleting user:", error);
-          toast.error(`Failed to delete user ${selectedUser.name}.`);
-        });
-      setDialogOpen(false);
-      setSelectedUser(null);
-    }
-  };
-  const confirmActivate = () => {
-    if (selectedUser) {
-      // deleteUser(Number(selectedUser.id))
-      //   .then(() => {
-      //     toast.success(`User ${selectedUser.name} deleted successfully.`);
-      //   })
-      // .catch((error) => {
-      //   console.error("Error deleting user:", error);
-      //   toast.error(`Failed to delete user ${selectedUser.name}.`);
-      // });
-      toast.success(`User ${selectedUser.name} activated successfully.`);
-      setDialogOpen(false);
-      setSelectedUser(null);
-    }
-  };
+  // const confirmDelete = () => {
+  //   if (selectedUser) {
+  //     deleteUser(Number(selectedUser.id))
+  //       .then(() => {
+  //         toast.success(`User ${selectedUser.name} deleted successfully.`);
+  //       })
+  //       .catch((error) => {
+  //         console.error("Error deleting user:", error);
+  //         toast.error(`Failed to delete user ${selectedUser.name}.`);
+  //       });
+  //     setDialogOpen(false);
+  //     setSelectedUser(null);
+  //   }
+  // };
+
+  // const confirmActivate = () => {
+  //   if (selectedUser) {
+  //     activateUser(Number(selectedUser.id))
+  //       .then(() => {
+  //         toast.success(`User ${selectedUser.name} activated successfully.`);
+  //       })
+  //       .catch((error) => {
+  //         console.error("Error activating user:", error);
+  //         toast.error(`Failed activating user ${selectedUser.name}.`);
+  //       });
+  //     setDialogOpen(false);
+  //     setSelectedUser(null);
+  //   }
+  // };
 
   const onEditUser = (user: User) => {
     setUserToEdit(user);
     setEditOpen(true);
+    console.log("Editing user:", user);
   };
 
   const columns: ColumnDef<User>[] = [
@@ -138,6 +145,11 @@ export function UsersTable() {
       header: "Role",
     },
     {
+      accessorKey: "active",
+      header: "Active",
+      cell: ({ row }) => (row.original.active ? "Yes ✅" : "No ❌"),
+    },
+    {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => (
@@ -152,7 +164,7 @@ export function UsersTable() {
               Edit
             </Button>
           )}
-          {currentUser?.role === "sys_admin" &&
+          {/* {currentUser?.role === "sys_admin" &&
             (row.original.active ? (
               <Button
                 variant="destructive"
@@ -175,14 +187,14 @@ export function UsersTable() {
               >
                 Activate
               </Button>
-            ))}
+            ))} */}
         </div>
       ),
     },
   ];
 
   const table = useReactTable({
-    data: users,
+    data: filteredUsers,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
@@ -194,6 +206,8 @@ export function UsersTable() {
           <h2 className="text-lg font-semibold">
             Users of {selectedOrg?.name}
           </h2>
+
+          {/* add user button */}
           {(currentUser?.role === "sys_admin" ||
             currentUser?.role === "org_admin") && (
             <Button
@@ -252,8 +266,8 @@ export function UsersTable() {
           </Table>
         </div>
 
-        {/* Alert dialog for deletion */}
-        <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        {/* delete user confirmation */}
+        {/* <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <AlertDialogContent>
             <AlertDialogHeader>
               <AlertDialogTitle>Are you sure?</AlertDialogTitle>
@@ -268,8 +282,10 @@ export function UsersTable() {
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
-        </AlertDialog>
-        <AlertDialog
+        </AlertDialog> */}
+
+        {/* activate user confirmation */}
+        {/* <AlertDialog
           open={activateDialogOpen}
           onOpenChange={setActivateDialogOpen}
         >
@@ -287,10 +303,10 @@ export function UsersTable() {
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
-        </AlertDialog>
+        </AlertDialog> */}
       </div>
 
-      {/* Pagination */}
+      {/* pagination */}
       <div className="flex justify-between items-center mt-4">
         <Button
           variant="outline"
@@ -309,7 +325,7 @@ export function UsersTable() {
         </Button>
       </div>
 
-      {/* Add User Dialog */}
+      {/* add user modal */}
       <UserFormDialog
         open={addOpen}
         onOpenChange={setAddOpen}
@@ -319,7 +335,7 @@ export function UsersTable() {
         }}
       />
 
-      {/* Edit User Dialog */}
+      {/* edit user modal */}
       <UserFormDialog
         open={editOpen}
         onOpenChange={setEditOpen}

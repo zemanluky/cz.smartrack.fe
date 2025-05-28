@@ -29,7 +29,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useUserStore } from "@/lib/stores/userStore";
-import { Plus } from "lucide-react";
 
 export const userFormSchema = z.object({
   name: z

@@ -3,9 +3,8 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import {
   getUsersForOrganization,
   postUserForOrganization,
-  deleteUserForOrganization,
+  putUserForOrganization,
 } from "@/api/organizationUsersApi";
-import { number } from "zod";
 
 type User = {
   name: string;
@@ -46,8 +45,9 @@ type OrganizationUsersStore = {
   loading: boolean;
   fetchUsers: (page: number) => Promise<UserListResponse | undefined>;
   addUser: (user: PostUser) => Promise<void>;
-  deleteUser: (id: number) => Promise<void>;
-  editUser: (id: number, updatedUser: Partial<User>) => void;
+  editUser: (id: number, updatedUser: Partial<User>) => Promise<void>;
+  // deleteUser: (id: number) => Promise<void>;
+  // activateUser: (id: number) => Promise<void>;
 };
 
 export const useOrganizationUsersStore = create<OrganizationUsersStore>()(
@@ -79,25 +79,37 @@ export const useOrganizationUsersStore = create<OrganizationUsersStore>()(
           console.error("Failed to add user:", error);
         }
       },
-      deleteUser: async (id: number) => {
+      editUser: async (id: number, updatedUser: Partial<User>) => {
         try {
-          const response = await deleteUserForOrganization(id);
-          if (response) {
-            set((state) => ({
-              users: state.users.filter((user) => user.id !== id),
-            }));
-          }
+          await putUserForOrganization(id, updatedUser).then(
+            (response: User | undefined) => {
+              if (response) {
+                set((state) => ({
+                  users: state.users.map((user) =>
+                    user.id === id ? { ...user, ...updatedUser } : user
+                  ),
+                }));
+              }
+            }
+          );
         } catch (error) {
-          console.error("Failed to delete user:", error);
+          console.error("Failed to update user:", error);
         }
       },
-      editUser: async (id: number, updatedUser: Partial<User>) => {
-        set((state) => ({
-          users: state.users.map((user) =>
-            user.id === id ? { ...user, ...updatedUser } : user
-          ),
-        }));
-      },
+      // deleteUser: async (id: number) => {
+      //   try {
+      //     await deleteUserForOrganization(id);
+      //   } catch (error) {
+      //     console.error("Failed to delete user:", error);
+      //   }
+      // },
+      //   activateUser: async (id: number) => {
+      //     try {
+      //       await activateUser(id);
+      //     } catch (error) {
+      //       console.error("Failed to activate user:", error);
+      //     }
+      //   },
     }),
     {
       name: "organization-users-storage",
