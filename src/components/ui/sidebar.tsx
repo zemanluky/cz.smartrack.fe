@@ -23,6 +23,12 @@ const systemAdminNavItems = [
     icon: RouterIcon,
     roles: ["sys_admin"],
   },
+  {
+    label: "Uživatelé",
+    to: "/users",
+    icon: Users, // Using Users icon
+    roles: ["sys_admin"],
+  },
 ];
 
 const commonNavItems = [
@@ -30,7 +36,7 @@ const commonNavItems = [
     label: "Uživatelé",
     to: "/users",
     icon: Users, // Using Users icon
-    roles: ["sys_admin", "org_admin"],
+    roles: ["org_admin"],
   },
   {
     label: "Přehled",
@@ -66,11 +72,15 @@ export const Sidebar = ({ onNavItemClick }: SidebarProps) => {
     );
   }
 
-  const renderNavLinks = (items: typeof systemAdminNavItems | typeof commonNavItems) => {
+  const renderNavLinks = (
+    items: typeof systemAdminNavItems | typeof commonNavItems
+  ) => {
     return items
       .filter(({ roles }) => roles.includes(userRole!)) // userRole is checked, so it's safe to use !
       .map(({ label, to, icon: Icon }) => {
-        const active = location.pathname === to || (to !== "/" && location.pathname.startsWith(to + "/"));
+        const active =
+          location.pathname === to ||
+          (to !== "/" && location.pathname.startsWith(to + "/"));
         return (
           <Link
             key={to}
@@ -90,7 +100,9 @@ export const Sidebar = ({ onNavItemClick }: SidebarProps) => {
       });
   };
 
-  const filteredSystemAdminItems = systemAdminNavItems.filter(({ roles }) => roles.includes(userRole!));
+  const filteredSystemAdminItems = systemAdminNavItems.filter(({ roles }) =>
+    roles.includes(userRole!)
+  );
 
   return (
     <aside className="w-64 h-full border-r bg-background p-4 flex flex-col shadow-sm">

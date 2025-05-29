@@ -177,7 +177,7 @@ export function OrganizationsTable() {
             variant="outline"
             size="sm"
             onClick={() => {
-              onEditOrg(row.original);
+              onEditOrg(row.original); // Use the onEditOrg function
             }}
           >
             Edit

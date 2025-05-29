@@ -51,22 +51,9 @@ export async function getUsersForOrganization(
   page: number = 1,
   limit: number = 20
 ): Promise<UsersResponse | undefined> {
-  const currentUser = useUserStore.getState().currentUser;
-
-  let url;
-  if (currentUser?.role === "sys_admin") {
-    const selectedOrgId = Number(
-      useOrganizationStore.getState().selectedOrganizationId
-    );
-    console.log("Selected Organization ID:", selectedOrgId);
-    url = `/user/?page=${page}&limit=${limit}&organization_id=${selectedOrgId}`;
-  } else {
-    url = `/user/?page=${page}&limit=${limit}`;
-  }
-
   const options = {
     method: "GET",
-    url,
+    url: `/user/?page=${page}&limit=${limit}`,
     headers: {
       "Content-Type": "application/json",
     },

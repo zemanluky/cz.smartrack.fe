@@ -31,7 +31,7 @@ import { useOrganizationStore } from "@/lib/stores/organizationsStore";
 import { useRequireOrganization } from "@/hooks/common/useRequireOrganization";
 import { useUserStore } from "@/lib/stores/userStore";
 import { UserFormDialog } from "./userFormDialog";
-import { Plus } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -40,14 +40,22 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 
-interface User {
+interface Organization {
   id: number;
+  name: string;
+  active: boolean;
+}
+
+type User = {
   name: string;
   email: string;
   role: string;
   active: boolean;
-}
+  id: number;
+  organization: Organization;
+};
 
 interface UserCardItemProps {
   user: User;
@@ -120,10 +128,11 @@ export function UsersTable() {
   const { selectedOrganizationId, organizations } = useOrganizationStore(); // Removed setOrganizations
   const currentUser = useUserStore((state) => state.currentUser);
 
-  useRequireOrganization(); // Hook to ensure organization is selected
-
+  if (currentUser?.role !== "sys_admin") {
+    useRequireOrganization(); // Hook to ensure organization is selected
+  }
   useEffect(() => {
-    if (selectedOrganizationId) {
+    if (selectedOrganizationId || currentUser?.role === "sys_admin") {
       fetchUsers(currentPage, ITEMS_PER_PAGE);
     }
   }, [currentPage, fetchUsers, selectedOrganizationId]);
@@ -137,11 +146,13 @@ export function UsersTable() {
   }, [totalUsersCount]);
 
   useEffect(() => {
-    if (selectedOrganizationId) {
+    if (selectedOrganizationId && !(currentUser?.role === "sys_admin")) {
       const orgUsers = users.filter(
         (user) => user.organization?.id === Number(selectedOrganizationId)
       );
       setFilteredUsers(orgUsers);
+    } else if (currentUser?.role === "sys_admin") {
+      setFilteredUsers(users);
     } else {
       setFilteredUsers([]); // Clear users if no organization is selected
     }
@@ -174,6 +185,12 @@ export function UsersTable() {
       header: "Role",
     },
     {
+      accessorKey: "organization.name",
+      header: "Organization",
+      cell: ({ row }) =>
+        row.original.organization ? row.original.organization.name : "",
+    },
+    {
       accessorKey: "active",
       header: "Active",
       cell: ({ row }) => (row.original.active ? "Yes ✅" : "No ❌"), // Restored emoji
@@ -204,16 +221,6 @@ export function UsersTable() {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  if (!selectedOrganizationId) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <p className="text-muted-foreground">
-          Please select an organization to view users.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="p-4 space-y-4">
       {/* Container for title and button, changed from flex to block stacking */}
@@ -230,13 +237,21 @@ export function UsersTable() {
 
         {(currentUser?.role === "sys_admin" ||
           currentUser?.role === "org_admin") && (
-          <Button
-            className="w-full sm:w-auto flex items-center gap-2"
-            onClick={() => setIsAddOpen(true)}
-          >
-            <Plus className="h-4 w-4" />
-            Add User
-          </Button>
+          <div className="flex items-center gap-4 mb-4 justify-between">
+            <Button
+              className="w-full sm:w-auto flex items-center gap-2"
+              onClick={() => setIsAddOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              Add User
+            </Button>
+            <div className="flex items-center space-x-2">
+              <Checkbox className="border-black" />
+              <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                Include inactive users
+              </label>
+            </div>
+          </div>
         )}
       </div>
 
