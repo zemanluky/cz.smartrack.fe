@@ -21,13 +21,13 @@ const systemAdminNavItems = [
   },
   {
     label: "Správa Zařízení",
-    to: "/admin/device-management",
+    to: "/device-management",
     icon: RouterIcon,
     roles: ["sys_admin"],
   },
   {
     label: "Správa Regálů", // Správa struktury regálů
-    to: "/admin/shelf-management",
+    to: "/shelf-management",
     icon: ArchiveIcon, 
     roles: ["sys_admin"],
   },
@@ -40,6 +40,10 @@ const commonNavItems = [
     icon: Users, 
     roles: ["sys_admin", "org_admin"],
   },
+  // Položky "Přehled" a "Produkty" byly přesunuty do organizationUserNavItems
+];
+
+const organizationUserNavItems = [
   {
     label: "Přehled",
     to: "/dashboard",
@@ -52,15 +56,11 @@ const commonNavItems = [
     icon: Boxes,
     roles: ["sys_admin", "org_admin", "org_user"],
   },
-  // Položka "Regály" byla odsud odstraněna, nahrazena specifičtějšími položkami
-];
-
-const organizationUserNavItems = [
   {
     label: "Správa Skladu", // Správa obsahu regálů
-    to: "/organization/shelf-stock",
+    to: "/shelf-stock",
     icon: PackageSearchIcon,
-    roles: ["org_admin", "org_user"],
+    roles: ["sys_admin", "org_admin", "org_user"], // Všechny role mají mít přístup
   },
 ];
 

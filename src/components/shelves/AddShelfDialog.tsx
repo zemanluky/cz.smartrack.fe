@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -47,10 +47,23 @@ const shelfFormSchema = z.object({
 type ShelfFormValues = z.infer<typeof shelfFormSchema>;
 
 export const AddShelfDialog: React.FC = () => {
-  const { addShelf, addShelfPosition } = useShelvesStore(); // Předpokládáme, že addShelfPosition existuje nebo ho přidáme
-  const { organizations } = useOrganizationStore();
+  const { addShelf, addShelfPosition } = useShelvesStore(); 
+  const { organizations, setOrganizations } = useOrganizationStore(); // Přidáno setOrganizations
   const currentUser = useUserStore((state) => state.currentUser);
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    if (open && currentUser?.role === "sys_admin") {
+      // Načteme organizace pouze pokud je dialog otevřen a uživatel je sys_admin
+      // a pokud nejsou již načteny (volitelné, pro optimalizaci)
+      if (organizations.length === 0) { // Jednoduchá kontrola, zda už nejsou načteny
+        setOrganizations().catch(error => {
+          console.error("Failed to load organizations in AddShelfDialog:", error);
+          toast.error("Nepodařilo se načíst organizace.");
+        });
+      }
+    }
+  }, [open, currentUser, organizations.length, setOrganizations]); // Závislosti useEffectu
 
   const form = useForm<ShelfFormValues>({
     resolver: zodResolver(shelfFormSchema),
@@ -178,6 +191,11 @@ export const AddShelfDialog: React.FC = () => {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
+                        {organizations.length === 0 && currentUser?.role === "sys_admin" && (
+                          <SelectItem value="loading" disabled>
+                            Načítání organizací...
+                          </SelectItem>
+                        )}
                         {organizations.map((org) => (
                           <SelectItem key={org.id} value={org.id.toString()}>
                             {org.name}

@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { useUserStore } from "@/lib/stores/userStore";
-import { listGatewayDevices, GatewayDevice } from "@/api/adminApi";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pagination } from "@/components/ui/pagination";
-import { Input } from "@/components/ui/input";
+import { useUserStore } from "@/lib/stores/userStore.ts";
+import { listGatewayDevices, GatewayDevice } from "@/api/adminApi.ts";
+import { Button } from "@/components/ui/button.tsx";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { Pagination } from "@/components/ui/pagination.tsx";
+import { Input } from "@/components/ui/input.tsx";
 import { toast } from "sonner";
 import { Search, RefreshCw, Battery, Signal } from "lucide-react";
-import AddGatewayDeviceDialog from "@/components/devices/AddGatewayDeviceDialog";
-import GatewayDeviceDetails from "@/components/devices/GatewayDeviceDetails";
+import AddGatewayDeviceDialog from "@/components/devices/AddGatewayDeviceDialog.tsx";
+import GatewayDeviceDetails from "@/components/devices/GatewayDeviceDetails.tsx";
 
 const DeviceManagementPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("gateways");

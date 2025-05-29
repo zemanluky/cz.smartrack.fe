@@ -10,11 +10,12 @@ import { useUserStore } from "@/lib/stores/userStore";
 import LoginPage from "./app/login/page";
 import UsersPage from "./app/users/page";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute"; // Import new ProtectedRoute
-import DeviceManagementPage from "./app/admin/device-management/page"; // AKTUALIZOVANÁ CESTA
+import DeviceManagementPage from "@/app/device-management/page"; // AKTUALIZOVANÁ CESTA
 // import ShelvesPage from "./app/shelves/page"; // Stará stránka, nahrazena
-import ShelfDetailPage from "./app/shelves/[id]/page"; // Původní stránka detailu, dočasně použita i pro admina
-import AdminShelfManagementPage from "./app/admin/shelf-management/page"; // NOVÁ STRÁNKA
-import OrgShelfStockPage from "./app/organizations/shelf-stock/page"; // NOVÁ STRÁNKA - OPRAVENA CESTA
+// import ShelfDetailPage from "./app/shelves/[id]/page"; // Stará stránka detailu, již nepoužita
+import AdminShelfManagementPage from "@/app/shelf-management/page"; // NOVÁ STRÁNKA
+import ShelfManagementDetailPage from "@/app/shelf-management/[id]/page"; // NOVÁ STRÁNKA DETAILU
+import OrgShelfStockPage from "@/app/shelf-stock/page"; // NOVÁ STRÁNKA - OPRAVENA CESTA
 
 
 export default function App() {
@@ -107,7 +108,7 @@ export default function App() {
           }
         />
         <Route 
-          path="/admin/device-management"
+          path="/device-management"
           element={ 
             <Layout>
               <ProtectedRoute 
@@ -119,7 +120,7 @@ export default function App() {
         />
         {/* Staré routy pro /shelves a /shelves/:id jsou odstraněny */}
         <Route
-          path="/admin/shelf-management"
+          path="/shelf-management"
           element={
             <Layout>
               <ProtectedRoute 
@@ -130,23 +131,24 @@ export default function App() {
           }
         />
         <Route
-          path="/admin/shelf-management/:id"
+          path="/shelf-management/:id"
           element={
             <Layout>
               <ProtectedRoute 
-                element={<ShelfDetailPage />} // Použijeme existující ShelfDetailPage
+                element={<ShelfManagementDetailPage />} // Nová komponenta pro detail regálu
                 allowedRoles={["sys_admin"]}
               />
             </Layout>
           }
         />
         <Route
-          path="/organization/shelf-stock"
+          path="/shelf-stock"
           element={
             <Layout>
+              {/* Přidáno sys_admin pro testování */}
               <ProtectedRoute 
                 element={<OrgShelfStockPage />}
-                allowedRoles={["org_admin", "org_user"]}
+                allowedRoles={["sys_admin", "org_admin", "org_user"]}
               />
             </Layout>
           }

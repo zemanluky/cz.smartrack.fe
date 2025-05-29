@@ -1,4 +1,4 @@
-// src/app/admin/shelf-management/page.tsx
+// src/app/shelf-management/page.tsx
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ShelfTable } from "@/components/shelves/ShelfTable";
@@ -49,8 +49,8 @@ export default function AdminShelfManagementPage() {
 
   const handleViewShelf = (shelf: Shelf) => {
     // Navigace na detail regálu pod admin správou
-    // Tuto routu budeme muset také definovat v App.tsx
-    navigate(`/admin/shelf-management/${shelf.id}`); 
+    // Tuto routu jsme upravili v App.tsx na novou cestu bez prefixu /admin/
+    navigate(`/shelf-management/${shelf.id}`); 
   };
 
   const handleEditShelf = (shelf: Shelf) => {
