@@ -48,7 +48,8 @@ type OrganizationUsersStore = {
   totalUsersCount: number; // Added to store total number of users for pagination
   fetchUsers: (
     page: number,
-    limit: number
+    limit: number,
+    includeInactive: boolean
   ) => Promise<UserListResponse | undefined>; // Added limit parameter
   addUser: (user: PostUser) => Promise<void>;
   editUser: (id: number, updatedUser: Partial<User>) => Promise<void>;
@@ -63,16 +64,24 @@ export const useOrganizationUsersStore = create<OrganizationUsersStore>()(
       loading: false,
       totalUsersCount: 0, // Initialize totalUsersCount
 
-      fetchUsers: async (page: number, limit: number) => {
+      fetchUsers: async (
+        page: number,
+        limit: number,
+        includeInactive: boolean
+      ) => {
         // Added limit parameter
         set({ loading: true });
         try {
-          const response = await getUsersForOrganization(page, limit); // Pass limit to API call
+          const response = await getUsersForOrganization(
+            page,
+            limit,
+            includeInactive
+          ); // Pass limit to API call
           if (response) {
             set({
               users: response.items,
               loading: false,
-              totalUsersCount: response.metadata.total_results,
+              totalUsersCount: response.metadata.filtered_total_results,
             });
           } else {
             set({ users: [], loading: false, totalUsersCount: 0 });

@@ -49,11 +49,18 @@ interface UsersResponse {
 
 export async function getUsersForOrganization(
   page: number = 1,
-  limit: number = 20
+  limit: number = 20,
+  includeInactive: boolean = true
 ): Promise<UsersResponse | undefined> {
+  let url: string;
+  if (!includeInactive) {
+    url = `/user/?page=${page}&limit=${limit}&active=true`;
+  } else {
+    url = `/user/?page=${page}&limit=${limit}`;
+  }
   const options = {
     method: "GET",
-    url: `/user/?page=${page}&limit=${limit}`,
+    url,
     headers: {
       "Content-Type": "application/json",
     },

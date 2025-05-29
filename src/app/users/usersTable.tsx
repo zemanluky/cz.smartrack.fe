@@ -125,6 +125,8 @@ export function UsersTable() {
   const [isEditOpen, setIsEditOpen] = useState(false); // Corrected setter name
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
 
+  const [includeInactive, setIncludeInactive] = useState(false);
+
   const { selectedOrganizationId, organizations } = useOrganizationStore(); // Removed setOrganizations
   const currentUser = useUserStore((state) => state.currentUser);
 
@@ -133,13 +135,18 @@ export function UsersTable() {
   }
   useEffect(() => {
     if (selectedOrganizationId || currentUser?.role === "sys_admin") {
-      fetchUsers(currentPage, ITEMS_PER_PAGE);
+      fetchUsers(currentPage, ITEMS_PER_PAGE, includeInactive);
     }
-  }, [currentPage, fetchUsers, selectedOrganizationId]);
+  }, [currentPage, fetchUsers, selectedOrganizationId, includeInactive]);
 
   useEffect(() => {
     if (totalUsersCount > 0) {
       setTotalPages(Math.ceil(totalUsersCount / ITEMS_PER_PAGE));
+      console.log(
+        `Total users count: ${totalUsersCount}, Total pages: ${Math.ceil(
+          totalUsersCount / ITEMS_PER_PAGE
+        )}`
+      );
     } else {
       setTotalPages(0);
     }
@@ -246,7 +253,11 @@ export function UsersTable() {
               Add User
             </Button>
             <div className="flex items-center space-x-2">
-              <Checkbox className="border-black" />
+              <Checkbox
+                className="border-black"
+                checked={includeInactive}
+                onCheckedChange={(checked) => setIncludeInactive(!!checked)}
+              />
               <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
                 Include inactive users
               </label>
