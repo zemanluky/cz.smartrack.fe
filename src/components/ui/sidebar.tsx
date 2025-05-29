@@ -6,6 +6,7 @@ import {
   Building,
   Settings,
   RouterIcon,
+  BookmarkIcon,
 } from "lucide-react";
 import { useUserStore } from "@/lib/stores/userStore";
 // import { useOrganizationStore } from "@/lib/stores/organizationsStore"; // Not used in this component
@@ -42,6 +43,12 @@ const commonNavItems = [
     label: "Produkty",
     to: "/products",
     icon: Boxes,
+    roles: ["sys_admin", "org_admin", "org_user"],
+  },
+  {
+    label: "Regály",
+    to: "/shelves",
+    icon: BookmarkIcon,
     roles: ["sys_admin", "org_admin", "org_user"],
   },
 ];

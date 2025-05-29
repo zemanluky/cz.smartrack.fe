@@ -10,6 +10,8 @@ import LoginPage from "./app/login/page";
 import UsersPage from "./app/users/page";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute"; // Import new ProtectedRoute
 import DeviceManagementPage from "./components/devices/DeviceManagementPage"; // Import DeviceManagementPage
+import ShelvesPage from "./app/shelves/page"; // Import ShelvesPage
+import ShelfDetailPage from "./app/shelves/[id]/page"; // Import ShelfDetailPage
 
 export default function App() {
   const restoreSession = useAuthStore((state) => state.restoreSession);
@@ -107,6 +109,28 @@ export default function App() {
               <ProtectedRoute 
                 element={<DeviceManagementPage />}
                 allowedRoles={["sys_admin"]}
+              />
+            </Layout>
+          }
+        />
+        <Route
+          path="/shelves"
+          element={
+            <Layout>
+              <ProtectedRoute 
+                element={<ShelvesPage />}
+                allowedRoles={["sys_admin", "org_admin", "org_user"]}
+              />
+            </Layout>
+          }
+        />
+        <Route
+          path="/shelves/:id"
+          element={
+            <Layout>
+              <ProtectedRoute 
+                element={<ShelfDetailPage />}
+                allowedRoles={["sys_admin", "org_admin", "org_user"]}
               />
             </Layout>
           }
