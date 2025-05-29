@@ -4,6 +4,7 @@ import {
   getOrganizations,
   postOrganization,
   deleteOrganizations,
+  putOrganization,
 } from "@/api/organizationsApi";
 
 export type Organization = {
@@ -54,13 +55,21 @@ export const useOrganizationStore = create<OrganizationStore>()(
         }
       },
 
-      updateOrganization: (updatedOrg) =>
-        set((state) => ({
-          organizations: state.organizations.map((org) =>
-            org.id === updatedOrg.id ? updatedOrg : org
-          ),
-        })),
-
+      updateOrganization: async (updatedOrg) => {
+        try {
+          await putOrganization(updatedOrg.id, {
+            name: updatedOrg.name,
+            active: updatedOrg.active,
+          });
+          set((state) => ({
+            organizations: state.organizations.map((org) =>
+              org.id === updatedOrg.id ? updatedOrg : org
+            ),
+          }));
+        } catch (error) {
+          console.log("Error updating org");
+        }
+      },
       removeOrganization: async (id) => {
         try {
           await deleteOrganizations(id);

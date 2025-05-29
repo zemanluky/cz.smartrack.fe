@@ -43,3 +43,25 @@ export async function deleteOrganizations(id: number) {
     console.error(error);
   }
 }
+
+export async function putOrganization(
+  id: number,
+  organization: {
+    name: string;
+    active: boolean;
+  }
+) {
+  const options = {
+    method: "PUT",
+    url: `/organization/${id}`,
+    headers: { "Content-Type": "application/json" },
+    data: { name: organization.name, active: organization.active },
+  };
+
+  try {
+    const { data } = await api.request(options);
+    console.log(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
