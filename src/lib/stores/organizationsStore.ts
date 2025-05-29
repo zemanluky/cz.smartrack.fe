@@ -6,7 +6,7 @@ import {
   deleteOrganizations,
 } from "@/api/organizationsApi";
 
-type Organization = {
+export type Organization = {
   id: number;
   name: string;
   active: boolean;
@@ -83,7 +83,9 @@ export const useOrganizationStore = create<OrganizationStore>()(
     {
       name: "organization-storage",
       storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ selectedOrganizationId: state.selectedOrganizationId }),
+      partialize: (state) => ({
+        selectedOrganizationId: state.selectedOrganizationId,
+      }),
     }
   )
 );

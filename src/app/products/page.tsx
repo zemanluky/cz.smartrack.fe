@@ -37,7 +37,7 @@ const ProductsPage = (): JSX.Element => {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col items-start gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
         <h1 className="text-2xl font-bold">Products</h1>
         <AddProductDialog onSuccess={async () => {
           setLoading(true);

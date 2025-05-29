@@ -1,10 +1,11 @@
 import {
   useReactTable,
   getCoreRowModel,
+  getPaginationRowModel, // Added for pagination
   flexRender,
   ColumnDef,
 } from "@tanstack/react-table";
-import { useOrganizationStore } from "@/lib/stores/organizationsStore";
+import { useOrganizationStore, type Organization } from "@/lib/stores/organizationsStore"; // Import Organization type
 import { AddOrganization } from "./addOrganization";
 import {
   Table,
@@ -28,17 +29,59 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  // CardDescription, // No longer used in OrganizationCardItem
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { toast } from "sonner";
+import { Pagination } from "@/components/ui/pagination"; // Use the project's custom Pagination component
 
-type Organization = {
-  id: number;
-  name: string;
-  active: boolean;
+// Define the OrganizationCardItem component
+interface OrganizationCardItemProps {
+  organization: Organization;
+  onViewDashboard: (organization: Organization) => void;
+  onDelete: (organization: Organization) => void;
+}
+
+const OrganizationCardItem = ({ organization, onViewDashboard, onDelete }: OrganizationCardItemProps) => {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="break-words">{organization.name}</CardTitle>
+        {/* ID moved to CardContent */}
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground break-words">ID: {organization.id}</p>
+        <p className={`text-sm font-medium break-words ${organization.active ? 'text-green-600' : 'text-red-600'}`}>
+          Status: {organization.active ? "Active" : "Inactive"}
+        </p>
+      </CardContent>
+      <CardFooter className="flex flex-col space-y-2 pt-4 sm:flex-row sm:space-y-0 sm:justify-end sm:space-x-2 sm:items-center">
+        <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => onViewDashboard(organization)}>
+          View Dashboard
+        </Button>
+        <Button variant="destructive" size="sm" className="w-full sm:w-auto" onClick={() => onDelete(organization)}>
+          Delete
+        </Button>
+      </CardFooter>
+    </Card>
+  );
 };
 
 export function OrganizationsTable() {
-  const { organizations, setOrganizations, removeOrganization, setSelectedOrganizationId } =
-    useOrganizationStore();
+  // Ensure `row.original` is typed correctly if it wasn't automatically inferred.
+  // For ColumnDef<Organization>, row.original will be Organization.
+
+  const {
+    organizations,
+    setOrganizations,
+    removeOrganization,
+    setSelectedOrganizationId,
+  } = useOrganizationStore();
   const navigate = useNavigate();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -82,7 +125,7 @@ export function OrganizationsTable() {
             size="sm"
             onClick={() => {
               setSelectedOrganizationId(String(row.original.id));
-              toast.info('Switched to organization: ' + row.original.name);
+              toast.info("Switched to organization: " + row.original.name);
               navigate("/dashboard");
             }}
           >
@@ -107,16 +150,25 @@ export function OrganizationsTable() {
     data: organizations,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(), // Added for pagination
+    initialState: {
+      pagination: {
+        pageIndex: 0, // Initial page index
+        pageSize: 10, // Items per page
+      },
+    },
   });
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Organizations</h2>
+      {/* Container for title and button, changed from flex to block stacking */}
+      <div>
+        <h2 className="text-lg font-semibold mb-4">Organizations</h2> {/* Added mb-4 for spacing */}
         <AddOrganization />
       </div>
 
-      <div className="rounded-md border">
+      {/* Desktop Table View */}
+      <div className="hidden min-[950px]:block rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -161,6 +213,41 @@ export function OrganizationsTable() {
           </TableBody>
         </Table>
       </div>
+
+      {/* Mobile Card View */}
+      <div className="block min-[950px]:hidden space-y-3">
+        {table.getRowModel().rows.length > 0 ? (
+          table.getRowModel().rows.map((row) => (
+            <OrganizationCardItem
+              key={row.original.id}
+              organization={row.original}
+              onViewDashboard={(organizationToView) => {
+                setSelectedOrganizationId(String(organizationToView.id));
+                toast.info("Switched to organization: " + organizationToView.name);
+                navigate("/dashboard");
+              }}
+              onDelete={(organizationToDelete) => {
+                setSelectedOrgId(organizationToDelete.id);
+                setDialogOpen(true);
+              }}
+            />
+          ))
+        ) : (
+          <div className="text-center text-muted-foreground p-4 border rounded-md">
+            No organizations found.
+          </div>
+        )}
+      </div>
+
+      {/* Pagination Controls using the project's custom Pagination component */}
+      {table.getPageCount() > 1 && (
+        <Pagination
+          className="py-4"
+          currentPage={table.getState().pagination.pageIndex + 1}
+          totalPages={table.getPageCount()}
+          onPageChange={(page) => table.setPageIndex(page - 1)} // The component expects 1-based index
+        />
+      )}
 
       <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <AlertDialogContent>

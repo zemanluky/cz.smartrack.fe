@@ -1,38 +1,58 @@
 import { useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useUserStore } from '@/lib/stores/userStore';
 import { useOrganizationStore } from '@/lib/stores/organizationsStore';
 
 /**
- * Redirects sys_admin to /organizations if no org is selected.
+ * Redirects sys_admin (and org_admin if includeOrgAdmin is true) to /organizations if no org is selected.
  * Returns true if a redirect or loading is happening (show a loading message), false otherwise.
  */
 export function useRequireOrganization({ includeOrgAdmin = false }: { includeOrgAdmin?: boolean } = {}) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { currentUser } = useUserStore();
-  const { selectedOrganizationId, setSelectedOrganizationId } = useOrganizationStore();
+  const { selectedOrganizationId } = useOrganizationStore(); // setSelectedOrganizationId is not used for writing here
 
-  const hasShownToast = useRef(false);
+  const hasShownToastAndNavigated = useRef(false);
 
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser) return; // Wait for user data
 
-    if (currentUser.role === 'sys_admin') {
+    const needsOrgSelection =
+      currentUser.role === 'sys_admin' ||
+      (includeOrgAdmin && currentUser.role === 'org_admin');
+
+    if (needsOrgSelection) {
       if (!selectedOrganizationId) {
-        if (!hasShownToast.current) {
+        // Only navigate if not already on the target page and action hasn't been taken yet
+        if (location.pathname !== '/organizations' && !hasShownToastAndNavigated.current) {
           toast.info('Please select an organization to continue.');
-          hasShownToast.current = true;
+          navigate('/organizations');
+          hasShownToastAndNavigated.current = true; // Mark that action has been taken
         }
-        navigate('/organizations');
       } else {
-        hasShownToast.current = false;
+        // If an organization is selected, reset the flag, allowing for re-trigger if selection is cleared later
+        hasShownToastAndNavigated.current = false;
       }
+    } else {
+      // If user role doesn't require org selection (or includeOrgAdmin is false for org_admin),
+      // ensure the flag is reset so it doesn't persist a true state from a previous role/condition.
+      hasShownToastAndNavigated.current = false;
     }
-  }, [currentUser, selectedOrganizationId, navigate, setSelectedOrganizationId, includeOrgAdmin]);
+  }, [currentUser, selectedOrganizationId, navigate, location.pathname, includeOrgAdmin]);
 
-  // Return true if loading/redirecting (no org selected for sys_admin)
-  if (!currentUser) return true;
-  if (currentUser.role === 'sys_admin' && !selectedOrganizationId) return true;
-  return false;
+  // Determine if loading/redirecting state should be signaled to the component using the hook
+  if (!currentUser) return true; // User data not yet loaded
+
+  const userShouldBeRedirected =
+    (currentUser.role === 'sys_admin' || (includeOrgAdmin && currentUser.role === 'org_admin')) &&
+    !selectedOrganizationId &&
+    location.pathname !== '/organizations';
+
+  if (userShouldBeRedirected) {
+    return true; // Signal that a redirect is pending or has just occurred, so UI can show loading/wait
+  }
+
+  return false; // Otherwise, content can be displayed
 }

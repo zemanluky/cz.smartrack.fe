@@ -11,6 +11,7 @@ export async function login(email: string, password: string) {
   try {
     const { data } = await api.request(options);
     console.log(data);
+    console.log("Access token:", data.access);
     return data.access;
   } catch (error) {
     console.error(error);

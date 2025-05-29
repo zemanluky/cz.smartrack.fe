@@ -75,7 +75,7 @@ export function AddOrganization() {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
-          className="flex items-center gap-2"
+          className="w-full sm:w-auto flex items-center gap-2"
           onClick={() => setIsOpen(true)}
         >
           <Plus className="h-4 w-4" />
@@ -85,7 +85,10 @@ export function AddOrganization() {
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Add New Organization</DialogTitle>
-          <DialogDescription>Fill out the form to add a new organization. All fields are required.</DialogDescription>
+          <DialogDescription>
+            Fill out the form to add a new organization. All fields are
+            required.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
