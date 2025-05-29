@@ -32,7 +32,7 @@ import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
+  // CardDescription, // No longer used in OrganizationCardItem
   CardFooter,
   CardHeader,
   CardTitle,
@@ -52,9 +52,10 @@ const OrganizationCardItem = ({ organization, onViewDashboard, onDelete }: Organ
     <Card>
       <CardHeader>
         <CardTitle className="break-words">{organization.name}</CardTitle>
-        <CardDescription className="break-words">ID: {organization.id}</CardDescription>
+        {/* ID moved to CardContent */}
       </CardHeader>
       <CardContent>
+        <p className="text-sm text-muted-foreground break-words">ID: {organization.id}</p>
         <p className={`text-sm font-medium break-words ${organization.active ? 'text-green-600' : 'text-red-600'}`}>
           Status: {organization.active ? "Active" : "Inactive"}
         </p>
@@ -160,13 +161,14 @@ export function OrganizationsTable() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Organizations</h2>
+      {/* Container for title and button, changed from flex to block stacking */}
+      <div>
+        <h2 className="text-lg font-semibold mb-4">Organizations</h2> {/* Added mb-4 for spacing */}
         <AddOrganization />
       </div>
 
       {/* Desktop Table View */}
-      <div className="hidden md:block rounded-md border">
+      <div className="hidden min-[950px]:block rounded-md border">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -213,7 +215,7 @@ export function OrganizationsTable() {
       </div>
 
       {/* Mobile Card View */}
-      <div className="block md:hidden space-y-3">
+      <div className="block min-[950px]:hidden space-y-3">
         {table.getRowModel().rows.length > 0 ? (
           table.getRowModel().rows.map((row) => (
             <OrganizationCardItem

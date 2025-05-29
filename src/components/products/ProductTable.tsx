@@ -64,7 +64,7 @@ export const ProductTable: React.FC<ProductTableProps> = ({ products, onEdit, on
   return (
       <>
     {/* Desktop Table View */}
-    <div className="hidden md:block w-full overflow-x-auto">
+    <div className="hidden min-[950px]:block w-full overflow-x-auto">
       <Table>
         <TableHeader>
           <TableRow>
@@ -102,7 +102,7 @@ export const ProductTable: React.FC<ProductTableProps> = ({ products, onEdit, on
     </div>
 
     {/* Mobile Card View */}
-    <div className="block md:hidden space-y-3">
+    <div className="block min-[950px]:hidden space-y-3">
       {currentProducts.length > 0 ? (
         currentProducts.map((product) => (
           <ProductCardItem 

@@ -43,7 +43,8 @@ type PostUser = {
 type OrganizationUsersStore = {
   users: User[];
   loading: boolean;
-  fetchUsers: (page: number) => Promise<UserListResponse | undefined>;
+  totalUsersCount: number; // Added to store total number of users for pagination
+  fetchUsers: (page: number, limit: number) => Promise<UserListResponse | undefined>; // Added limit parameter
   addUser: (user: PostUser) => Promise<void>;
   editUser: (id: number, updatedUser: Partial<User>) => Promise<void>;
   // deleteUser: (id: number) => Promise<void>;
@@ -55,16 +56,26 @@ export const useOrganizationUsersStore = create<OrganizationUsersStore>()(
     (set) => ({
       users: [],
       loading: false,
+      totalUsersCount: 0, // Initialize totalUsersCount
 
-      fetchUsers: async (page: number) => {
+      fetchUsers: async (page: number, limit: number) => { // Added limit parameter
         set({ loading: true });
         try {
-          const response = await getUsersForOrganization(page);
-          set({ users: response?.items, loading: false });
+          const response = await getUsersForOrganization(page, limit); // Pass limit to API call
+          if (response) {
+            set({ 
+              users: response.items, 
+              loading: false, 
+              totalUsersCount: response.metadata.total_results 
+            });
+          } else {
+            set({ users: [], loading: false, totalUsersCount: 0 });
+          }
           return response;
         } catch (error) {
           console.error("Failed to fetch users:", error);
-          set({ users: [], loading: false });
+          set({ users: [], loading: false, totalUsersCount: 0 });
+          return undefined; // Ensure a UserListResponse | undefined is returned
         }
       },
       addUser: async (user: PostUser) => {
@@ -114,6 +125,7 @@ export const useOrganizationUsersStore = create<OrganizationUsersStore>()(
     {
       name: "organization-users-storage",
       storage: createJSONStorage(() => localStorage),
+      // Do not persist totalUsersCount as it should be fetched fresh
       partialize: (state) => ({ users: state.users }),
     }
   )

@@ -75,7 +75,7 @@ export function AddOrganization() {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button
-          className="flex items-center gap-2"
+          className="w-full sm:w-auto flex items-center gap-2"
           onClick={() => setIsOpen(true)}
         >
           <Plus className="h-4 w-4" />
