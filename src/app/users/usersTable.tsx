@@ -56,9 +56,11 @@ interface UserCardItemProps {
 }
 
 const UserCardItem = ({ user, onEdit, currentUserRole }: UserCardItemProps) => {
-  const canEdit = currentUserRole === "sys_admin" ||
-                  currentUserRole === "org_admin" ||
-                  (currentUserRole === "org_user" && useUserStore.getState().currentUser?.id === user.id);
+  const canEdit =
+    currentUserRole === "sys_admin" ||
+    currentUserRole === "org_admin" ||
+    (currentUserRole === "org_user" &&
+      useUserStore.getState().currentUser?.id === user.id);
 
   return (
     <Card>
@@ -67,17 +69,25 @@ const UserCardItem = ({ user, onEdit, currentUserRole }: UserCardItemProps) => {
         {/* Email moved to CardContent */}
       </CardHeader>
       <CardContent>
-        <p className="text-sm text-muted-foreground break-words">{user.email}</p>
-        <p className="text-sm text-muted-foreground break-words">Role: {user.role}</p>
-        <p className={`text-sm font-medium break-words ${user.active ? 'text-green-600' : 'text-red-600'}`}>
+        <p className="text-sm text-muted-foreground break-words">
+          {user.email}
+        </p>
+        <p className="text-sm text-muted-foreground break-words">
+          Role: {user.role}
+        </p>
+        <p
+          className={`text-sm font-medium break-words ${
+            user.active ? "text-green-600" : "text-red-600"
+          }`}
+        >
           Status: {user.active ? "Active" : "Inactive"}
         </p>
       </CardContent>
       <CardFooter className="flex flex-col space-y-2 pt-4 sm:flex-row sm:space-y-0 sm:justify-end sm:space-x-2 sm:items-center">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          className="w-full sm:w-auto" 
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full sm:w-auto"
           onClick={() => onEdit(user)}
           disabled={!canEdit}
         >
@@ -95,7 +105,9 @@ export function UsersTable() {
   const fetchUsers = useOrganizationUsersStore((state) => state.fetchUsers);
   const addUser = useOrganizationUsersStore((state) => state.addUser);
   const editUser = useOrganizationUsersStore((state) => state.editUser);
-  const totalUsersCount = useOrganizationUsersStore((state) => state.totalUsersCount);
+  const totalUsersCount = useOrganizationUsersStore(
+    (state) => state.totalUsersCount
+  );
 
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -105,8 +117,7 @@ export function UsersTable() {
   const [isEditOpen, setIsEditOpen] = useState(false); // Corrected setter name
   const [userToEdit, setUserToEdit] = useState<User | null>(null);
 
-  const { selectedOrganizationId, organizations } = // Removed setOrganizations
-    useOrganizationStore();
+  const { selectedOrganizationId, organizations } = useOrganizationStore(); // Removed setOrganizations
   const currentUser = useUserStore((state) => state.currentUser);
 
   useRequireOrganization(); // Hook to ensure organization is selected
@@ -207,8 +218,14 @@ export function UsersTable() {
     <div className="p-4 space-y-4">
       {/* Container for title and button, changed from flex to block stacking */}
       <div>
-        <h2 className="text-lg font-semibold mb-4"> {/* Added mb-4 for spacing */}
-          Users of {organizations.find((o) => String(o.id) === selectedOrganizationId)?.name}
+        <h2 className="text-lg font-semibold mb-4">
+          {" "}
+          {/* Added mb-4 for spacing */}
+          Users of{" "}
+          {
+            organizations.find((o) => String(o.id) === selectedOrganizationId)
+              ?.name
+          }
         </h2>
 
         {(currentUser?.role === "sys_admin" ||

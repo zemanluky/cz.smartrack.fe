@@ -127,6 +127,12 @@ export async function putUserForOrganization(
   };
   try {
     const { data } = await api.request<User>(options);
+    if (updatedUser.active) {
+      await activateUserForOrganization(id);
+    }
+    if (!updatedUser.active) {
+      await deleteUserForOrganization(id);
+    }
     console.log(data);
     return data;
   } catch (error) {
@@ -134,32 +140,34 @@ export async function putUserForOrganization(
   }
 }
 
-// export async function deleteUserForOrganization(
-//   id: number
-// ): Promise<Response | undefined> {
-//   const options = {
-//     method: "DELETE",
-//     url: `/user/${id}`,
-//     headers: { "Content-Type": "application/json" },
-//   };
-//   try {
-//     return await api.request(options);
-//   } catch (error) {
-//     console.error(error);
-//   }
-// }
+export async function deleteUserForOrganization(
+  id: number
+): Promise<Response | undefined> {
+  const options = {
+    method: "DELETE",
+    url: `/user/${id}`,
+    headers: { "Content-Type": "application/json" },
+  };
+  try {
+    return await api.request(options);
+  } catch (error) {
+    console.error(error);
+  }
+}
 
-// export async function activateUser(id: number): Promise<User | undefined> {
-//   const options = {
-//     method: "PATCH",
-//     url: `/user/${id}/active-status`,
-//     headers: { "Content-Type": "application/json" },
-//   };
-//   try {
-//     const { data } = await api.request<User>(options);
-//     console.log(data);
-//     return data;
-//   } catch (error) {
-//     console.error(error);
-//   }
-// }
+export async function activateUserForOrganization(
+  id: number
+): Promise<User | undefined> {
+  const options = {
+    method: "PATCH",
+    url: `/user/${id}/active-status`,
+    headers: { "Content-Type": "application/json" },
+  };
+  try {
+    const { data } = await api.request<User>(options);
+    console.log(data);
+    return data;
+  } catch (error) {
+    console.error(error);
+  }
+}

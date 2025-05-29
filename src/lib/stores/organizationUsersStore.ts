@@ -4,6 +4,8 @@ import {
   getUsersForOrganization,
   postUserForOrganization,
   putUserForOrganization,
+  deleteUserForOrganization,
+  activateUserForOrganization,
 } from "@/api/organizationUsersApi";
 
 export type User = {
@@ -44,11 +46,14 @@ type OrganizationUsersStore = {
   users: User[];
   loading: boolean;
   totalUsersCount: number; // Added to store total number of users for pagination
-  fetchUsers: (page: number, limit: number) => Promise<UserListResponse | undefined>; // Added limit parameter
+  fetchUsers: (
+    page: number,
+    limit: number
+  ) => Promise<UserListResponse | undefined>; // Added limit parameter
   addUser: (user: PostUser) => Promise<void>;
   editUser: (id: number, updatedUser: Partial<User>) => Promise<void>;
-  // deleteUser: (id: number) => Promise<void>;
-  // activateUser: (id: number) => Promise<void>;
+  deleteUser: (id: number) => Promise<void>;
+  activateUser: (id: number) => Promise<void>;
 };
 
 export const useOrganizationUsersStore = create<OrganizationUsersStore>()(
@@ -58,15 +63,16 @@ export const useOrganizationUsersStore = create<OrganizationUsersStore>()(
       loading: false,
       totalUsersCount: 0, // Initialize totalUsersCount
 
-      fetchUsers: async (page: number, limit: number) => { // Added limit parameter
+      fetchUsers: async (page: number, limit: number) => {
+        // Added limit parameter
         set({ loading: true });
         try {
           const response = await getUsersForOrganization(page, limit); // Pass limit to API call
           if (response) {
-            set({ 
-              users: response.items, 
-              loading: false, 
-              totalUsersCount: response.metadata.total_results 
+            set({
+              users: response.items,
+              loading: false,
+              totalUsersCount: response.metadata.total_results,
             });
           } else {
             set({ users: [], loading: false, totalUsersCount: 0 });
@@ -107,20 +113,20 @@ export const useOrganizationUsersStore = create<OrganizationUsersStore>()(
           console.error("Failed to update user:", error);
         }
       },
-      // deleteUser: async (id: number) => {
-      //   try {
-      //     await deleteUserForOrganization(id);
-      //   } catch (error) {
-      //     console.error("Failed to delete user:", error);
-      //   }
-      // },
-      //   activateUser: async (id: number) => {
-      //     try {
-      //       await activateUser(id);
-      //     } catch (error) {
-      //       console.error("Failed to activate user:", error);
-      //     }
-      //   },
+      deleteUser: async (id: number) => {
+        try {
+          await deleteUserForOrganization(id);
+        } catch (error) {
+          console.error("Failed to delete user:", error);
+        }
+      },
+      activateUser: async (id: number) => {
+        try {
+          await activateUserForOrganization(id);
+        } catch (error) {
+          console.error("Failed to activate user:", error);
+        }
+      },
     }),
     {
       name: "organization-users-storage",
