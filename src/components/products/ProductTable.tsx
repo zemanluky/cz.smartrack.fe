@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react"; // Added useState
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button"; // Assuming Button is used or will be for triggers
 import type { Product } from "@/lib/types/product";
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@/components/ui/table";
 import EditProductDialog from "@/components/products/EditProductDialog";
 import DeleteProductDialog from "@/components/products/DeleteProductDialog";
+import { Pagination } from "@/components/ui/pagination"; // Use the project's custom Pagination component
 
 interface ProductTableProps {
   products: Product[];
@@ -46,6 +47,20 @@ const ProductCardItem = ({ product, onEdit, onDelete }: ProductCardItemProps) =>
 };
 
 export const ProductTable: React.FC<ProductTableProps> = ({ products, onEdit, onDelete }) => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  // Calculate products for the current page
+  const indexOfLastItem = currentPage * itemsPerPage;
+  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
+  const currentProducts = products.slice(indexOfFirstItem, indexOfLastItem);
+
+  const totalPages = Math.ceil(products.length / itemsPerPage);
+
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+  };
+
   return (
       <>
     {/* Desktop Table View */}
@@ -59,8 +74,8 @@ export const ProductTable: React.FC<ProductTableProps> = ({ products, onEdit, on
           </TableRow>
         </TableHeader>
         <TableBody>
-          {products.length > 0 ? (
-            products.map((product) => (
+          {currentProducts.length > 0 ? (
+            currentProducts.map((product) => (
               <TableRow key={product.id}>
                 <TableCell className="text-left">{product.name}</TableCell>
                 <TableCell className="text-center">{product.price} Kč</TableCell>
@@ -88,8 +103,8 @@ export const ProductTable: React.FC<ProductTableProps> = ({ products, onEdit, on
 
     {/* Mobile Card View */}
     <div className="block md:hidden space-y-3">
-      {products.length > 0 ? (
-        products.map((product) => (
+      {currentProducts.length > 0 ? (
+        currentProducts.map((product) => (
           <ProductCardItem 
             key={product.id} 
             product={product} 
@@ -103,6 +118,17 @@ export const ProductTable: React.FC<ProductTableProps> = ({ products, onEdit, on
         </div>
       )}
     </div>
+
+    {/* Pagination Controls */}
+    {totalPages > 1 && (
+        <div className="flex items-center justify-center py-4">
+          <Pagination 
+            currentPage={currentPage} 
+            totalPages={totalPages} 
+            onPageChange={handlePageChange} 
+          />
+        </div>
+      )}
   </>
   );
 };

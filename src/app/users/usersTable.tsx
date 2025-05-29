@@ -1,6 +1,7 @@
 import {
   useReactTable,
   getCoreRowModel,
+  getPaginationRowModel, // Added for pagination
   flexRender,
   ColumnDef,
 } from "@tanstack/react-table";
@@ -38,6 +39,7 @@ import { AddUser } from "./addUser";
 import { useOrganizationStore } from "@/lib/stores/organizationsStore";
 import { useRequireOrganization } from "@/hooks/common/useRequireOrganization";
 import { useUserStore } from "@/lib/stores/userStore";
+import { Pagination } from "@/components/ui/pagination"; // Use the project's custom Pagination component
 
 // Define the UserCardItem component
 interface UserCardItemProps {
@@ -172,6 +174,13 @@ export function UsersTable() {
     data: users,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(), // Added for pagination
+    initialState: {
+      pagination: {
+        pageIndex: 0, // Initial page index
+        pageSize: 10, // Items per page
+      },
+    },
   });
 
   return (
@@ -230,11 +239,11 @@ export function UsersTable() {
 
       {/* Mobile Card View */}
       <div className="block md:hidden space-y-3">
-        {users.length > 0 ? (
-          users.map((user) => (
+        {table.getRowModel().rows.length > 0 ? (
+          table.getRowModel().rows.map((row) => (
             <UserCardItem
-              key={user.id}
-              user={user}
+              key={row.original.id}
+              user={row.original}
               onView={(userToView) => toast.info(`Viewing user: ${userToView.name}`)}
               onDelete={(userToDelete) => {
                 setSelectedUser(userToDelete);
@@ -249,6 +258,16 @@ export function UsersTable() {
           </div>
         )}
       </div>
+
+      {/* Pagination Controls using the project's custom Pagination component */}
+      {table.getPageCount() > 1 && (
+        <Pagination
+          className="py-4"
+          currentPage={table.getState().pagination.pageIndex + 1}
+          totalPages={table.getPageCount()}
+          onPageChange={(page) => table.setPageIndex(page - 1)} // The component expects 1-based index
+        />
+      )}
 
       <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <AlertDialogContent>

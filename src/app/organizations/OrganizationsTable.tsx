@@ -1,6 +1,7 @@
 import {
   useReactTable,
   getCoreRowModel,
+  getPaginationRowModel, // Added for pagination
   flexRender,
   ColumnDef,
 } from "@tanstack/react-table";
@@ -37,6 +38,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { toast } from "sonner";
+import { Pagination } from "@/components/ui/pagination"; // Use the project's custom Pagination component
 
 // Define the OrganizationCardItem component
 interface OrganizationCardItemProps {
@@ -70,6 +72,9 @@ const OrganizationCardItem = ({ organization, onViewDashboard, onDelete }: Organ
 };
 
 export function OrganizationsTable() {
+  // Ensure `row.original` is typed correctly if it wasn't automatically inferred.
+  // For ColumnDef<Organization>, row.original will be Organization.
+
   const {
     organizations,
     setOrganizations,
@@ -144,6 +149,13 @@ export function OrganizationsTable() {
     data: organizations,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(), // Added for pagination
+    initialState: {
+      pagination: {
+        pageIndex: 0, // Initial page index
+        pageSize: 10, // Items per page
+      },
+    },
   });
 
   return (
@@ -202,11 +214,11 @@ export function OrganizationsTable() {
 
       {/* Mobile Card View */}
       <div className="block md:hidden space-y-3">
-        {organizations.length > 0 ? (
-          organizations.map((org) => (
+        {table.getRowModel().rows.length > 0 ? (
+          table.getRowModel().rows.map((row) => (
             <OrganizationCardItem
-              key={org.id}
-              organization={org}
+              key={row.original.id}
+              organization={row.original}
               onViewDashboard={(organizationToView) => {
                 setSelectedOrganizationId(String(organizationToView.id));
                 toast.info("Switched to organization: " + organizationToView.name);
@@ -224,6 +236,16 @@ export function OrganizationsTable() {
           </div>
         )}
       </div>
+
+      {/* Pagination Controls using the project's custom Pagination component */}
+      {table.getPageCount() > 1 && (
+        <Pagination
+          className="py-4"
+          currentPage={table.getState().pagination.pageIndex + 1}
+          totalPages={table.getPageCount()}
+          onPageChange={(page) => table.setPageIndex(page - 1)} // The component expects 1-based index
+        />
+      )}
 
       <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <AlertDialogContent>
