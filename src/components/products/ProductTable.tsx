@@ -1,4 +1,5 @@
 import React, { useState } from "react"; // Added useState
+import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button"; // Assuming Button is used or will be for triggers
 import type { Product } from "@/lib/types/product";
@@ -6,6 +7,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import EditProductDialog from "@/components/products/EditProductDialog";
 import DeleteProductDialog from "@/components/products/DeleteProductDialog";
 import { Pagination } from "@/components/ui/pagination"; // Use the project's custom Pagination component
+import { InfoIcon } from "lucide-react";
 
 interface ProductTableProps {
   products: Product[];
@@ -21,15 +23,30 @@ interface ProductCardItemProps {
 }
 
 const ProductCardItem = ({ product, onEdit, onDelete }: ProductCardItemProps) => {
+  const navigate = useNavigate();
+  
+  const handleViewDetail = () => {
+    navigate(`/products/detail?id=${product.id}`);
+  };
+  
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="break-words">{product.name}</CardTitle>
       </CardHeader>
       <CardContent>
-        <p className="text-lg font-semibold break-words">Price: {product.price} Kč</p>
+        <p className="text-lg font-semibold break-words">Cena: {product.price} Kč</p>
       </CardContent>
       <CardFooter className="flex flex-col space-y-2 pt-4 sm:flex-row sm:space-y-0 sm:justify-end sm:space-x-2 sm:items-center">
+        <Button 
+          variant="secondary" 
+          size="sm" 
+          className="w-full sm:w-auto"
+          onClick={handleViewDetail}
+        >
+          <InfoIcon className="h-4 w-4 mr-1" />
+          Detail
+        </Button>
         <EditProductDialog 
           product={product} 
           onSuccess={onEdit} 
@@ -47,6 +64,7 @@ const ProductCardItem = ({ product, onEdit, onDelete }: ProductCardItemProps) =>
 };
 
 export const ProductTable: React.FC<ProductTableProps> = ({ products, onEdit, onDelete }) => {
+  const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
 
@@ -80,6 +98,15 @@ export const ProductTable: React.FC<ProductTableProps> = ({ products, onEdit, on
                 <TableCell className="text-left">{product.name}</TableCell>
                 <TableCell className="text-center">{product.price} Kč</TableCell>
                 <TableCell className="text-center">
+                  <Button 
+                    variant="secondary" 
+                    size="sm" 
+                    className="mr-2"
+                    onClick={() => navigate(`/products/detail?id=${product.id}`)}
+                  >
+                    <InfoIcon className="h-4 w-4 mr-1" />
+                    Detail
+                  </Button>
                   <EditProductDialog product={product} onSuccess={() => onEdit && onEdit()} trigger={<Button variant="outline" size="sm" className="mr-2">Edit</Button>} />
                   <DeleteProductDialog
                     productId={product.id}

@@ -1,4 +1,4 @@
-import type { Shelf, ShelfCreate, ShelfDetail, PaginatedResponse } from "@/lib/types/shelf";
+import type { Shelf, ShelfCreate, ShelfDetail, PaginatedResponse, ShelfPosition, ShelfPositionCreate } from "@/lib/types/shelf";
 import api from "./api";
 import { AxiosError } from 'axios';
 
@@ -7,8 +7,6 @@ import { AxiosError } from 'axios';
  */
 export async function fetchShelves(options?: { organization_id?: number, includeUnassigned?: boolean }): Promise<PaginatedResponse<Shelf> | undefined> {
   try {
-    // V novém přístupu umožňujeme načítat všechny regály (bez filtru), regály konkrétní organizace,
-    // nebo explicitně nepřiřazené regály (includeUnassigned=true)
     const params = options || {};
     const { data } = await api.get("/shelf", { params });
     return data;
@@ -22,10 +20,6 @@ export async function fetchShelves(options?: { organization_id?: number, include
         extractedMessage = responseData.message;
       } else if (typeof responseData.error === 'string' && responseData.error.trim() !== '') {
         extractedMessage = responseData.error;
-      } else if (typeof responseData === 'string' && responseData.trim() !== '') {
-        // If responseData is a simple string (e.g., HTML error page), avoid using it directly if too long.
-        // For now, we'll let it fall through to err.message or default.
-        // A more sophisticated approach might try to parse a title or summary.
       }
     }
 
@@ -53,8 +47,6 @@ export async function fetchShelfById(id: number): Promise<ShelfDetail | undefine
  */
 export async function createShelf(payload: ShelfCreate): Promise<ShelfDetail | undefined> {
   try {
-    // Pokud vytváříme nepřiřazený regál, můžeme nastavit organization_id na null
-    // Dodáváme payload přímo, může obsahovat organization_id jako null nebo konkrétní ID
     const { data } = await api.post("/shelf", payload);
     return data;
   } catch (err: any) {
@@ -96,28 +88,20 @@ export function getShelvesFilterOptions(
   selectedOrganizationId: string | null,
   showUnassigned: boolean = false
 ): { organization_id?: number, includeUnassigned?: boolean } {
-  // Výchozí stav - prázdný objekt pro filtrování
   const filterOptions: { organization_id?: number, includeUnassigned?: boolean } = {};
   
-  // Pro sys_admin uživatele
   if (user?.role === 'sys_admin') {
-    // Pokud je vybrána organizace, přidáme filtr na ni
     if (selectedOrganizationId) {
       filterOptions.organization_id = Number(selectedOrganizationId);
     }
     
-    // Pokud je nastaven příznak pro zobrazení nepřiřazených regálů
     if (showUnassigned) {
       filterOptions.includeUnassigned = true;
-      // Odstraníme organization_id, pokud chceme výhradně nepřiřazené regály
       delete filterOptions.organization_id;
     }
-    
-    // Pokud nejsou nastavené žádné filtry, získáme všechny regály (pro sys_admin)
     return filterOptions;
   }
   
-  // Pro org_admin nebo org_user vždy filtrujeme podle jejich organizace
   if ((user?.role === 'org_admin' || user?.role === 'org_user') && user.organization?.id) {
     filterOptions.organization_id = user.organization.id;
   }
@@ -135,4 +119,27 @@ export function getFetchShelvesOrgId(
 ): number | undefined {
   const options = getShelvesFilterOptions(user, selectedOrganizationId);
   return options.organization_id;
+}
+
+/**
+ * Create a new shelf position
+ */
+export async function createShelfPositionApi(
+  shelfId: number,
+  payload: ShelfPositionCreate
+): Promise<ShelfPosition | undefined> {
+  try {
+    const { data } = await api.post(`/shelf/${shelfId}/shelf-position`, payload);
+    return data; // API should return the created shelf position data
+  } catch (err: any) {
+    console.error(`Failed to create shelf position for shelf ID ${shelfId}:`, err);
+    const axiosError = err as AxiosError<any>;
+    let errorMessage = `Nepodařilo se vytvořit pozici ${payload.row}-${payload.column} pro regál.`;
+    if (axiosError.response?.data?.message) {
+        errorMessage = axiosError.response.data.message;
+    } else if (err.message) {
+        errorMessage = err.message;
+    }
+    throw new Error(errorMessage);
+  }
 }

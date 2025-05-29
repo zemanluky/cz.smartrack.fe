@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/ui/layout";
 import ProductsPage from "@/app/products/page";
+import ProductDetailPage from "@/app/products/detail/page"; // Import ProductDetailPage
 import OrganizationsPage from "./app/organizations/page";
 import OrganizationDashboardPage from "./app/dashboard/page";
 import { useAuthStore } from "@/lib/stores/authStore";
@@ -9,9 +10,12 @@ import { useUserStore } from "@/lib/stores/userStore";
 import LoginPage from "./app/login/page";
 import UsersPage from "./app/users/page";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute"; // Import new ProtectedRoute
-import DeviceManagementPage from "./components/devices/DeviceManagementPage"; // Import DeviceManagementPage
-import ShelvesPage from "./app/shelves/page"; // Import ShelvesPage
-import ShelfDetailPage from "./app/shelves/[id]/page"; // Import ShelfDetailPage
+import DeviceManagementPage from "./app/admin/device-management/page"; // AKTUALIZOVANÁ CESTA
+// import ShelvesPage from "./app/shelves/page"; // Stará stránka, nahrazena
+import ShelfDetailPage from "./app/shelves/[id]/page"; // Původní stránka detailu, dočasně použita i pro admina
+import AdminShelfManagementPage from "./app/admin/shelf-management/page"; // NOVÁ STRÁNKA
+import OrgShelfStockPage from "./app/organizations/shelf-stock/page"; // NOVÁ STRÁNKA - OPRAVENA CESTA
+
 
 export default function App() {
   const restoreSession = useAuthStore((state) => state.restoreSession);
@@ -113,23 +117,46 @@ export default function App() {
             </Layout>
           }
         />
+        {/* Staré routy pro /shelves a /shelves/:id jsou odstraněny */}
         <Route
-          path="/shelves"
+          path="/admin/shelf-management"
           element={
             <Layout>
               <ProtectedRoute 
-                element={<ShelvesPage />}
-                allowedRoles={["sys_admin", "org_admin", "org_user"]}
+                element={<AdminShelfManagementPage />}
+                allowedRoles={["sys_admin"]}
               />
             </Layout>
           }
         />
         <Route
-          path="/shelves/:id"
+          path="/admin/shelf-management/:id"
           element={
             <Layout>
               <ProtectedRoute 
-                element={<ShelfDetailPage />}
+                element={<ShelfDetailPage />} // Použijeme existující ShelfDetailPage
+                allowedRoles={["sys_admin"]}
+              />
+            </Layout>
+          }
+        />
+        <Route
+          path="/organization/shelf-stock"
+          element={
+            <Layout>
+              <ProtectedRoute 
+                element={<OrgShelfStockPage />}
+                allowedRoles={["org_admin", "org_user"]}
+              />
+            </Layout>
+          }
+        />
+        <Route
+          path="/products/detail"
+          element={
+            <Layout>
+              <ProtectedRoute 
+                element={<ProductDetailPage />}
                 allowedRoles={["sys_admin", "org_admin", "org_user"]}
               />
             </Layout>

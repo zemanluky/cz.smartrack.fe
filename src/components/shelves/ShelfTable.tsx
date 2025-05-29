@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom"; // Odstraněno - nepoužito
 import {
   Table,
   TableBody,
@@ -17,7 +17,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { toast } from "sonner";
+// import { toast } from "sonner"; // Odstraněno - nepoužito
 import type { Shelf } from "@/lib/types/shelf";
 import { PlusIcon, PencilIcon, TrashIcon, ArrowRightIcon } from "lucide-react";
 
@@ -81,7 +81,7 @@ interface ShelfTableProps {
   onView: (shelf: Shelf) => void;
   onEdit: (shelf: Shelf) => void;
   onDelete: (shelf: Shelf) => void;
-  onAdd: () => void;
+  onAdd?: () => void; // onAdd je nyní volitelné
 }
 
 export const ShelfTable: React.FC<ShelfTableProps> = ({ 
@@ -116,10 +116,12 @@ export const ShelfTable: React.FC<ShelfTableProps> = ({
     <>
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">Regály</h2>
-        <Button onClick={onAdd} className="flex items-center gap-1">
-          <PlusIcon className="h-4 w-4" />
-          <span>Přidat regál</span>
-        </Button>
+        {onAdd && (
+          <Button onClick={onAdd} className="flex items-center gap-1">
+            <PlusIcon className="h-4 w-4" />
+            <span>Přidat regál</span>
+          </Button>
+        )}
       </div>
 
       {/* Desktop Table View */}

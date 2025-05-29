@@ -5,9 +5,17 @@ import {
   fetchShelfById, 
   createShelf, 
   updateShelf, 
-  deleteShelf 
+  deleteShelf,
+  createShelfPositionApi // Opraven název importu
 } from "@/api/shelfApi";
-import type { Shelf, ShelfCreate, ShelfDetail, PaginatedResponse } from "@/lib/types/shelf";
+import type {
+  Shelf,
+  ShelfCreate,
+  ShelfDetail,
+  ShelfPosition, // Přidáno
+  ShelfPositionCreate // Přidáno
+  // PaginatedResponse odstraněn - není přímo používán ve store
+} from "@/lib/types/shelf";
 import { toast } from "sonner";
 
 type ShelvesFilterOptions = {
@@ -31,6 +39,7 @@ type ShelvesStore = {
   removeShelf: (id: number) => Promise<void>;
   setSelectedShelf: (shelf: ShelfDetail | null) => void;
   setPage: (page: number) => void;
+  addShelfPosition: (shelfId: number, data: ShelfPositionCreate) => Promise<ShelfPosition | undefined>; // Přidáno
 };
 
 export const useShelvesStore = create<ShelvesStore>()(
@@ -158,7 +167,41 @@ export const useShelvesStore = create<ShelvesStore>()(
 
       setPage: (page: number) => {
         set({ currentPage: page });
-      }
+      },
+
+      addShelfPosition: async (shelfId: number, data: ShelfPositionCreate) => {
+        try {
+          set({ isLoading: true });
+          const newPosition = await createShelfPositionApi(shelfId, data); // Opraveno volání funkce
+
+          if (newPosition) {
+            set((state) => {
+              // Aktualizuj selectedShelf, pokud existuje a shoduje se ID
+              if (state.selectedShelf && state.selectedShelf.id === shelfId) {
+                return {
+                  selectedShelf: {
+                    ...state.selectedShelf,
+                    shelf_positions: [...state.selectedShelf.shelf_positions, newPosition],
+                  },
+                  isLoading: false,
+                };
+              }
+              // Pokud selectedShelf není relevantní, jen nastav isLoading na false
+              return { isLoading: false };
+            });
+            toast.success("Pozice v regálu byla úspěšně vytvořena.");
+            return newPosition;
+          }
+
+          set({ isLoading: false });
+          return undefined;
+        } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
+          console.error(`Chyba při vytváření pozice v regálu ${shelfId}:`, error);
+          toast.error(error.message || "Nepodařilo se vytvořit pozici v regálu.");
+          set({ isLoading: false });
+          return undefined;
+        }
+      },
     }),
     {
       name: "shelves-storage",

@@ -118,3 +118,12 @@ export interface PaginatedResponse<T> {
   metadata: PaginationMetadata;
   items: T[];
 }
+
+/**
+ * Options for filtering shelves list
+ */
+export interface ShelfFilterOptions {
+  organization_id?: number; // ID organizace, backend očekává číslo
+  unassigned?: boolean; // Zda zobrazit pouze nepřiřazené regály
+  // případné další filtry jako search_query, atd.
+}

@@ -40,12 +40,14 @@ const shelfFormSchema = z.object({
   shelf_name: z.string().min(3, "Název regálu musí mít alespoň 3 znaky"),
   shelf_store_location: z.string().nullable().optional(),
   organization_id: z.number().optional(),
+  numRows: z.coerce.number().min(1, "Počet řádků musí být alespoň 1").optional(),
+  numCols: z.coerce.number().min(1, "Počet sloupců musí být alespoň 1").optional(),
 });
 
 type ShelfFormValues = z.infer<typeof shelfFormSchema>;
 
 export const AddShelfDialog: React.FC = () => {
-  const { addShelf } = useShelvesStore();
+  const { addShelf, addShelfPosition } = useShelvesStore(); // Předpokládáme, že addShelfPosition existuje nebo ho přidáme
   const { organizations } = useOrganizationStore();
   const currentUser = useUserStore((state) => state.currentUser);
   const [open, setOpen] = useState(false);
@@ -59,22 +61,54 @@ export const AddShelfDialog: React.FC = () => {
         currentUser?.role !== "sys_admin" && currentUser?.organization?.id
           ? currentUser.organization.id
           : undefined,
+      numRows: 1,
+      numCols: 4,
     },
   });
 
   const onSubmit = async (data: ShelfFormValues) => {
     try {
-      // Transformace prázdného řetězce na null pro shelf_store_location
-      const formattedData = {
-        ...data,
-        shelf_store_location: data.shelf_store_location || null,
+      // Použijeme výchozí hodnoty, pokud numRows nebo numCols nejsou definovány (což by nemělo nastat díky defaultValues ve useForm, ale pro jistotu)
+      const currentNumRows = data.numRows || 1;
+      const currentNumCols = data.numCols || 4;
+      const { numRows, numCols, ...shelfBaseData } = data;
+
+      const formattedShelfBaseData = {
+        ...shelfBaseData,
+        shelf_store_location: shelfBaseData.shelf_store_location || null,
       };
 
-      await addShelf(formattedData);
+      // 1. Vytvořit regál
+      const newShelf = await addShelf(formattedShelfBaseData);
+
+      if (!newShelf || !newShelf.id) {
+        toast.error("Nepodařilo se získat ID nového regálu po jeho vytvoření.");
+        return;
+      }
+
+      // 2. Vytvořit pozice
+      const positionPromises = [];
+      for (let r = 1; r <= currentNumRows; r++) {
+        for (let c = 1; c <= currentNumCols; c++) {
+          const positionData = {
+            row: r,
+            column: c,
+            product_id: null,
+            max_current_product_capacity: null,
+            low_stock_threshold_percent: 20,
+          };
+          positionPromises.push(addShelfPosition(newShelf.id, positionData));
+        }
+      }
+
+      await Promise.all(positionPromises);
+
+      toast.success(`Regál "${newShelf.shelf_name}" a jeho ${currentNumRows * currentNumCols} pozic bylo úspěšně vytvořeno.`);
       form.reset();
       setOpen(false);
     } catch (error: any) {
-      toast.error(error.message || "Nepodařilo se přidat regál");
+      console.error("Chyba při vytváření regálu nebo pozic:", error);
+      toast.error(error.message || "Nepodařilo se přidat regál nebo jeho pozice");
     }
   };
 
@@ -156,6 +190,34 @@ export const AddShelfDialog: React.FC = () => {
                 )}
               />
             )}
+
+            <FormField
+              control={form.control}
+              name="numRows"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Počet řádků</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="Zadejte počet řádků" {...field} onChange={event => field.onChange(+event.target.value)} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="numCols"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Počet sloupců</FormLabel>
+                  <FormControl>
+                    <Input type="number" placeholder="Zadejte počet sloupců" {...field} onChange={event => field.onChange(+event.target.value)} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => setOpen(false)}>

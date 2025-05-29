@@ -6,10 +6,11 @@ import {
   Building,
   Settings,
   RouterIcon,
-  BookmarkIcon,
+  // BookmarkIcon, // Odebráno, nahrazeno specifičtějšími ikonami
+  ArchiveIcon, // Nová ikona pro správu regálů (struktura)
+  PackageSearchIcon, // Nová ikona pro správu skladu (obsah)
 } from "lucide-react";
 import { useUserStore } from "@/lib/stores/userStore";
-// import { useOrganizationStore } from "@/lib/stores/organizationsStore"; // Not used in this component
 
 const systemAdminNavItems = [
   {
@@ -24,13 +25,19 @@ const systemAdminNavItems = [
     icon: RouterIcon,
     roles: ["sys_admin"],
   },
+  {
+    label: "Správa Regálů", // Správa struktury regálů
+    to: "/admin/shelf-management",
+    icon: ArchiveIcon, 
+    roles: ["sys_admin"],
+  },
 ];
 
 const commonNavItems = [
   {
     label: "Uživatelé",
     to: "/users",
-    icon: Users, // Using Users icon
+    icon: Users, 
     roles: ["sys_admin", "org_admin"],
   },
   {
@@ -45,16 +52,27 @@ const commonNavItems = [
     icon: Boxes,
     roles: ["sys_admin", "org_admin", "org_user"],
   },
+  // Položka "Regály" byla odsud odstraněna, nahrazena specifičtějšími položkami
+];
+
+const organizationUserNavItems = [
   {
-    label: "Regály",
-    to: "/shelves",
-    icon: BookmarkIcon,
-    roles: ["sys_admin", "org_admin", "org_user"],
+    label: "Správa Skladu", // Správa obsahu regálů
+    to: "/organization/shelf-stock",
+    icon: PackageSearchIcon,
+    roles: ["org_admin", "org_user"],
   },
 ];
 
+type NavItem = {
+  label: string;
+  to: string;
+  icon: React.ElementType;
+  roles: string[];
+};
+
 type SidebarProps = {
-  onNavItemClick?: () => void; // Optional prop to handle nav item clicks, e.g., for closing mobile sidebar
+  onNavItemClick?: () => void; 
 };
 
 export const Sidebar = ({ onNavItemClick }: SidebarProps) => {
@@ -73,16 +91,16 @@ export const Sidebar = ({ onNavItemClick }: SidebarProps) => {
     );
   }
 
-  const renderNavLinks = (items: typeof systemAdminNavItems | typeof commonNavItems) => {
+  const renderNavLinks = (items: ReadonlyArray<NavItem>) => {
     return items
-      .filter(({ roles }) => roles.includes(userRole!)) // userRole is checked, so it's safe to use !
+      .filter(({ roles }) => roles.includes(userRole!)) 
       .map(({ label, to, icon: Icon }) => {
         const active = location.pathname === to || (to !== "/" && location.pathname.startsWith(to + "/"));
         return (
           <Link
             key={to}
             to={to}
-            onClick={onNavItemClick} // Call onNavItemClick when a link is clicked
+            onClick={onNavItemClick} 
             className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors
               ${
                 active
@@ -98,10 +116,11 @@ export const Sidebar = ({ onNavItemClick }: SidebarProps) => {
   };
 
   const filteredSystemAdminItems = systemAdminNavItems.filter(({ roles }) => roles.includes(userRole!));
+  const filteredOrganizationUserItems = organizationUserNavItems.filter(({ roles }) => roles.includes(userRole!));
+  const filteredCommonNavItems = commonNavItems.filter(({ roles }) => roles.includes(userRole!));
 
   return (
     <aside className="w-64 h-full border-r bg-background p-4 flex flex-col shadow-sm">
-      {/* Logo and title moved to Header.tsx */}
       <nav className="flex flex-col gap-1 flex-grow">
         {filteredSystemAdminItems.length > 0 && (
           <>
@@ -110,12 +129,27 @@ export const Sidebar = ({ onNavItemClick }: SidebarProps) => {
               Systémová Správa
             </div>
             {renderNavLinks(systemAdminNavItems)}
-            <hr className="my-3 border-border" />
+            {(filteredCommonNavItems.length > 0 || filteredOrganizationUserItems.length > 0) && <hr className="my-3 border-border" />}
           </>
         )}
-        {renderNavLinks(commonNavItems)}
+        
+        {filteredCommonNavItems.length > 0 && 
+          <>
+            {renderNavLinks(commonNavItems)}
+            {filteredOrganizationUserItems.length > 0 && <hr className="my-3 border-border" />}
+          </>
+        }
+
+        {filteredOrganizationUserItems.length > 0 && (
+           <>
+            <div className="px-1 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wider flex items-center">
+              <Building className="h-3.5 w-3.5 mr-1.5" />
+              Správa Organizace
+            </div>
+            {renderNavLinks(organizationUserNavItems)}
+           </>
+        )}
       </nav>
-      {/* Optional: Sidebar footer for user profile/logout, if not in header */}
     </aside>
   );
 };
