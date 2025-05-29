@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import {
   getUsersForOrganization,
   postUserForOrganization,
-  deleteUserForOrganization,
+  putUserForOrganization,
 } from "@/api/organizationUsersApi";
 
 export type User = {
@@ -19,6 +19,20 @@ export type User = {
   };
 };
 
+type Metadata = {
+  page: number;
+  limit: number;
+  current_offset: number;
+  has_next_page: boolean;
+  total_results: number;
+  filtered_total_results: number;
+};
+
+type UserListResponse = {
+  metadata: Metadata;
+  items: User[];
+};
+
 type PostUser = {
   name: string;
   email: string;
@@ -29,9 +43,11 @@ type PostUser = {
 type OrganizationUsersStore = {
   users: User[];
   loading: boolean;
-  fetchUsers: () => Promise<void>;
-  addUser: (user: User) => Promise<void>;
-  deleteUser: (id: number) => Promise<void>;
+  fetchUsers: (page: number) => Promise<UserListResponse | undefined>;
+  addUser: (user: PostUser) => Promise<void>;
+  editUser: (id: number, updatedUser: Partial<User>) => Promise<void>;
+  // deleteUser: (id: number) => Promise<void>;
+  // activateUser: (id: number) => Promise<void>;
 };
 
 export const useOrganizationUsersStore = create<OrganizationUsersStore>()(
@@ -40,11 +56,12 @@ export const useOrganizationUsersStore = create<OrganizationUsersStore>()(
       users: [],
       loading: false,
 
-      fetchUsers: async () => {
+      fetchUsers: async (page: number) => {
         set({ loading: true });
         try {
-          const response = await getUsersForOrganization();
+          const response = await getUsersForOrganization(page);
           set({ users: response?.items, loading: false });
+          return response;
         } catch (error) {
           console.error("Failed to fetch users:", error);
           set({ users: [], loading: false });
@@ -62,18 +79,37 @@ export const useOrganizationUsersStore = create<OrganizationUsersStore>()(
           console.error("Failed to add user:", error);
         }
       },
-      deleteUser: async (id: number) => {
+      editUser: async (id: number, updatedUser: Partial<User>) => {
         try {
-          const response = await deleteUserForOrganization(id);
-          if (response) {
-            set((state) => ({
-              users: state.users.filter((user) => user.id !== id),
-            }));
-          }
+          await putUserForOrganization(id, updatedUser).then(
+            (response: User | undefined) => {
+              if (response) {
+                set((state) => ({
+                  users: state.users.map((user) =>
+                    user.id === id ? { ...user, ...updatedUser } : user
+                  ),
+                }));
+              }
+            }
+          );
         } catch (error) {
-          console.error("Failed to delete user:", error);
+          console.error("Failed to update user:", error);
         }
       },
+      // deleteUser: async (id: number) => {
+      //   try {
+      //     await deleteUserForOrganization(id);
+      //   } catch (error) {
+      //     console.error("Failed to delete user:", error);
+      //   }
+      // },
+      //   activateUser: async (id: number) => {
+      //     try {
+      //       await activateUser(id);
+      //     } catch (error) {
+      //       console.error("Failed to activate user:", error);
+      //     }
+      //   },
     }),
     {
       name: "organization-users-storage",

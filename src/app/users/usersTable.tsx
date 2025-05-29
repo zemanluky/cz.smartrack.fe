@@ -1,11 +1,10 @@
 import {
   useReactTable,
   getCoreRowModel,
-  getPaginationRowModel, // Added for pagination
   flexRender,
   ColumnDef,
 } from "@tanstack/react-table";
-import { useOrganizationUsersStore, type User } from "@/lib/stores/organizationUsersStore"; // Import User type
+import { useOrganizationUsersStore } from "@/lib/stores/organizationUsersStore";
 import {
   Table,
   TableBody,
@@ -14,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -26,80 +25,67 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { toast } from "sonner";
-import { AddUser } from "./addUser";
 import { useOrganizationStore } from "@/lib/stores/organizationsStore";
 import { useRequireOrganization } from "@/hooks/common/useRequireOrganization";
 import { useUserStore } from "@/lib/stores/userStore";
-import { Pagination } from "@/components/ui/pagination"; // Use the project's custom Pagination component
+import { UserFormDialog } from "./userFormDialog";
+import { Plus } from "lucide-react";
 
-// Define the UserCardItem component
-interface UserCardItemProps {
-  user: User;
-  onView: (user: User) => void;
-  onDelete: (user: User) => void;
-  currentUserRole?: string;
+interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+  active: boolean;
 }
 
-const UserCardItem = ({ user, onView, onDelete, currentUserRole }: UserCardItemProps) => {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="break-words">{user.name}</CardTitle>
-        <CardDescription className="break-words">{user.email}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground break-words">Role: {user.role}</p>
-      </CardContent>
-      <CardFooter className="flex flex-col space-y-2 pt-4 sm:flex-row sm:space-y-0 sm:justify-end sm:space-x-2 sm:items-center">
-        <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => onView(user)}>
-          View
-        </Button>
-        {(currentUserRole === "sys_admin") && (
-          <Button variant="destructive" size="sm" className="w-full sm:w-auto" onClick={() => onDelete(user)}>
-            Delete
-          </Button>
-        )}
-      </CardFooter>
-    </Card>
-  );
-};
-
 export function UsersTable() {
-  const { users, fetchUsers, deleteUser } = useOrganizationUsersStore();
+  const { users, fetchUsers, addUser, editUser } = useOrganizationUsersStore();
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+
   const { selectedOrganizationId, organizations, setOrganizations } =
     useOrganizationStore();
   const currentUser = useUserStore((state) => state.currentUser);
 
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [page, setPage] = useState(1);
+  const [hasNextPage, setHasNextPage] = useState(false);
+
+  // const [dialogOpen, setDialogOpen] = useState(false);
+  // const [activateDialogOpen, setActivateDialogOpen] = useState(false);
+
+  // const [selectedUser, setSelectedUser] = useState<User | null>(null);
+
+  const [addOpen, setAddOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [userToEdit, setUserToEdit] = useState<User | null>(null);
 
   const loadingOrRedirecting = useRequireOrganization({
     includeOrgAdmin: true,
   });
 
   useEffect(() => {
+    if (selectedOrganizationId) {
+      fetchUsers(page).then((data) => {
+        setHasNextPage(data?.metadata?.has_next_page ?? false);
+      });
+    }
+  }, [selectedOrganizationId, page, fetchUsers]);
+
+  useEffect(() => {
     if (organizations.length === 0) {
       setOrganizations();
     }
-    if (selectedOrganizationId) {
-      fetchUsers();
+  }, [organizations.length, setOrganizations]);
+
+  useEffect(() => {
+    if (!users) return;
+    if (currentUser?.role !== "sys_admin") {
+      setFilteredUsers(users.filter((user) => user.active));
+    } else {
+      setFilteredUsers(users);
     }
-    console.log(users);
-  }, [
-    selectedOrganizationId,
-    fetchUsers,
-    organizations.length,
-    setOrganizations,
-  ]);
+  }, [users, currentUser?.role]);
 
   if (loadingOrRedirecting) {
     return <div>Loading or redirecting...</div>;
@@ -109,20 +95,40 @@ export function UsersTable() {
     (o) => String(o.id) === selectedOrganizationId
   );
 
-  const confirmDelete = () => {
-    if (selectedUser) {
-      deleteUser(selectedUser.id)
-        .then(() => {
-          toast.success(`User ${selectedUser.name} deleted successfully.`);
-        })
-        .catch((error) => {
-          console.error("Error deleting user:", error);
-          toast.error(`Failed to delete user ${selectedUser.name}.`);
-        });
-      toast.error(`User ${selectedUser.name} deleted.`);
-      setDialogOpen(false);
-      setSelectedUser(null);
-    }
+  // const confirmDelete = () => {
+  //   if (selectedUser) {
+  //     deleteUser(Number(selectedUser.id))
+  //       .then(() => {
+  //         toast.success(`User ${selectedUser.name} deleted successfully.`);
+  //       })
+  //       .catch((error) => {
+  //         console.error("Error deleting user:", error);
+  //         toast.error(`Failed to delete user ${selectedUser.name}.`);
+  //       });
+  //     setDialogOpen(false);
+  //     setSelectedUser(null);
+  //   }
+  // };
+
+  // const confirmActivate = () => {
+  //   if (selectedUser) {
+  //     activateUser(Number(selectedUser.id))
+  //       .then(() => {
+  //         toast.success(`User ${selectedUser.name} activated successfully.`);
+  //       })
+  //       .catch((error) => {
+  //         console.error("Error activating user:", error);
+  //         toast.error(`Failed activating user ${selectedUser.name}.`);
+  //       });
+  //     setDialogOpen(false);
+  //     setSelectedUser(null);
+  //   }
+  // };
+
+  const onEditUser = (user: User) => {
+    setUserToEdit(user);
+    setEditOpen(true);
+    console.log("Editing user:", user);
   };
 
   const columns: ColumnDef<User>[] = [
@@ -139,152 +145,222 @@ export function UsersTable() {
       header: "Role",
     },
     {
+      accessorKey: "active",
+      header: "Active",
+      cell: ({ row }) => (row.original.active ? "Yes ✅" : "No ❌"),
+    },
+    {
       id: "actions",
       header: "Actions",
       cell: ({ row }) => (
         <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              toast.info(`Viewing user: ${row.original.name}`);
-            }}
-          >
-            View
-          </Button>
-
-          {currentUser?.role === "sys_admin" && (
+          {currentUser?.role === "sys_admin" ||
+          currentUser?.role === "org_admin" ? (
             <Button
-              variant="destructive"
+              variant="outline"
               size="sm"
-              onClick={() => {
-                setSelectedUser(row.original);
-                setDialogOpen(true);
-              }}
+              onClick={() => onEditUser(row.original)}
             >
-              Delete
+              Edit
+            </Button>
+          ) : currentUser?.role === "org_user" &&
+            currentUser?.id === row.original.id ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onEditUser(row.original)}
+            >
+              Edit
+            </Button>
+          ) : (
+            <Button variant="outline" size="sm" disabled>
+              Edit
             </Button>
           )}
+          {/* {currentUser?.role === "sys_admin" &&
+            (row.original.active ? (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => {
+                  setSelectedUser(row.original);
+                  setDialogOpen(true);
+                }}
+              >
+                Delete
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSelectedUser(row.original);
+                  setActivateDialogOpen(true);
+                }}
+              >
+                Activate
+              </Button>
+            ))} */}
         </div>
       ),
     },
   ];
 
   const table = useReactTable({
-    data: users,
+    data: filteredUsers,
     columns,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(), // Added for pagination
-    initialState: {
-      pagination: {
-        pageIndex: 0, // Initial page index
-        pageSize: 10, // Items per page
-      },
-    },
   });
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-lg font-semibold">Users of {selectedOrg?.name}</h2>
-        {(currentUser?.role === "sys_admin" ||
-          currentUser?.role === "org_admin") && <AddUser />}
-      </div>
-      {/* Desktop Table View */}
-      <div className="hidden md:block rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
-                        )}
-                  </TableHead>
-                ))}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow key={row.id}>
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
+    <div className="size-full p-4">
+      <div className="space-y-4">
+        <div className="flex justify-between items-center">
+          <h2 className="text-lg font-semibold">
+            Users of {selectedOrg?.name}
+          </h2>
+
+          {/* add user button */}
+          {(currentUser?.role === "sys_admin" ||
+            currentUser?.role === "org_admin") && (
+            <Button
+              className="flex items-center gap-2"
+              onClick={() => setAddOpen(true)}
+            >
+              <Plus className="h-4 w-4" />
+              Add User
+            </Button>
+          )}
+        </div>
+
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead key={header.id}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext()
+                          )}
+                    </TableHead>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="text-center h-24"
-                >
-                  No users found.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="text-center h-24"
+                  >
+                    No users found.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+
+        {/* delete user confirmation */}
+        {/* <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will permanently delete the user.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDelete}>
+                Delete
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog> */}
+
+        {/* activate user confirmation */}
+        {/* <AlertDialog
+          open={activateDialogOpen}
+          onOpenChange={setActivateDialogOpen}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This will activate the user.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={confirmActivate}>
+                Activate
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog> */}
       </div>
 
-      {/* Mobile Card View */}
-      <div className="block md:hidden space-y-3">
-        {table.getRowModel().rows.length > 0 ? (
-          table.getRowModel().rows.map((row) => (
-            <UserCardItem
-              key={row.original.id}
-              user={row.original}
-              onView={(userToView) => toast.info(`Viewing user: ${userToView.name}`)}
-              onDelete={(userToDelete) => {
-                setSelectedUser(userToDelete);
-                setDialogOpen(true);
-              }}
-              currentUserRole={currentUser?.role}
-            />
-          ))
-        ) : (
-          <div className="text-center text-muted-foreground p-4 border rounded-md">
-            No users found.
-          </div>
-        )}
+      {/* pagination */}
+      <div className="flex justify-between items-center mt-4">
+        <Button
+          variant="outline"
+          disabled={page === 1}
+          onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+        >
+          Previous
+        </Button>
+        <span>Page {page}</span>
+        <Button
+          variant="outline"
+          disabled={!hasNextPage}
+          onClick={() => setPage((prev) => prev + 1)}
+        >
+          Next
+        </Button>
       </div>
 
-      {/* Pagination Controls using the project's custom Pagination component */}
-      {table.getPageCount() > 1 && (
-        <Pagination
-          className="py-4"
-          currentPage={table.getState().pagination.pageIndex + 1}
-          totalPages={table.getPageCount()}
-          onPageChange={(page) => table.setPageIndex(page - 1)} // The component expects 1-based index
-        />
-      )}
+      {/* add user modal */}
+      <UserFormDialog
+        open={addOpen}
+        onOpenChange={setAddOpen}
+        onSubmit={async (data) => {
+          await addUser(data);
+          setAddOpen(false);
+        }}
+      />
 
-      <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the user.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete}>
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* edit user modal */}
+      <UserFormDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        initialData={userToEdit || undefined}
+        onSubmit={async (data) => {
+          if (userToEdit) {
+            await editUser(Number(userToEdit.id), data);
+            setEditOpen(false);
+            setUserToEdit(null);
+          }
+        }}
+      />
     </div>
   );
 }

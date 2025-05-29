@@ -1,8 +1,6 @@
 import api from "./api";
 import { useOrganizationStore } from "@/lib/stores/organizationsStore";
-import { useOrganizationUsersStore } from "@/lib/stores/organizationUsersStore";
 import { useUserStore } from "@/lib/stores/userStore";
-import { userInfo } from "os";
 
 interface Organization {
   id: number;
@@ -49,29 +47,30 @@ interface UsersResponse {
   items: responseUser[];
 }
 
-export async function getUsersForOrganization(): Promise<
-  UsersResponse | undefined
-> {
+export async function getUsersForOrganization(
+  page: number = 1,
+  limit: number = 20
+): Promise<UsersResponse | undefined> {
   const currentUser = useUserStore.getState().currentUser;
-  let options;
+
+  let url;
   if (currentUser?.role === "sys_admin") {
-    const selectedOrgId =
-      useOrganizationStore.getState().selectedOrganizationId;
-    options = {
-      method: "GET",
-      url: "/user/",
-      headers: {
-        "Content-Type": "application/json",
-        organization_id: selectedOrgId,
-      },
-    };
+    const selectedOrgId = Number(
+      useOrganizationStore.getState().selectedOrganizationId
+    );
+    console.log("Selected Organization ID:", selectedOrgId);
+    url = `/user/?page=${page}&limit=${limit}&organization_id=${selectedOrgId}`;
   } else {
-    options = {
-      method: "GET",
-      url: "/user",
-      headers: { "Content-Type": "application/json" },
-    };
+    url = `/user/?page=${page}&limit=${limit}`;
   }
+
+  const options = {
+    method: "GET",
+    url,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
 
   try {
     const { data } = await api.request<UsersResponse>(options);
@@ -99,7 +98,6 @@ export async function postUserForOrganization(
       role: user.role,
     },
   };
-  console.log(options.data);
   try {
     const { data } = await api.request<User>(options);
     console.log(data);
@@ -109,17 +107,59 @@ export async function postUserForOrganization(
   }
 }
 
-export async function deleteUserForOrganization(
-  id: number
-): Promise<Response | undefined> {
+export async function putUserForOrganization(
+  id: number,
+  updatedUser: Partial<User>
+): Promise<User | undefined> {
   const options = {
-    method: "DELETE",
+    method: "PUT",
     url: `/user/${id}`,
     headers: { "Content-Type": "application/json" },
+    data: {
+      name: updatedUser.name,
+      email: updatedUser.email,
+      role: updatedUser.role,
+      organization_id: Number(
+        updatedUser.organization?.id ||
+          useOrganizationStore.getState().selectedOrganizationId
+      ),
+    },
   };
   try {
-    return await api.request(options);
+    const { data } = await api.request<User>(options);
+    console.log(data);
+    return data;
   } catch (error) {
     console.error(error);
   }
 }
+
+// export async function deleteUserForOrganization(
+//   id: number
+// ): Promise<Response | undefined> {
+//   const options = {
+//     method: "DELETE",
+//     url: `/user/${id}`,
+//     headers: { "Content-Type": "application/json" },
+//   };
+//   try {
+//     return await api.request(options);
+//   } catch (error) {
+//     console.error(error);
+//   }
+// }
+
+// export async function activateUser(id: number): Promise<User | undefined> {
+//   const options = {
+//     method: "PATCH",
+//     url: `/user/${id}/active-status`,
+//     headers: { "Content-Type": "application/json" },
+//   };
+//   try {
+//     const { data } = await api.request<User>(options);
+//     console.log(data);
+//     return data;
+//   } catch (error) {
+//     console.error(error);
+//   }
+// }
