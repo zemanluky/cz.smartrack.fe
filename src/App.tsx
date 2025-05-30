@@ -1,21 +1,20 @@
-import { useEffect } from "react";
+import { useEffect, Suspense, lazy } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/ui/layout";
-import ProductsPage from "@/app/products/page";
-import ProductDetailPage from "@/app/products/detail/page"; // Import ProductDetailPage
-import OrganizationsPage from "./app/organizations/page";
-import OrganizationDashboardPage from "./app/dashboard/page";
+const ProductsPage = lazy(() => import("@/app/products/page"));
+const ProductDetailPage = lazy(() => import("@/app/products/detail/page"));
+const OrganizationsPage = lazy(() => import("./app/organizations/page"));
+const OrganizationDashboardPage = lazy(() => import("./app/dashboard/page"));
+const LoginPage = lazy(() => import("./app/login/page"));
+const UsersPage = lazy(() => import("./app/users/page"));
+const DeviceManagementPage = lazy(() => import("@/app/device-management/page"));
+const AdminShelfManagementPage = lazy(() => import("@/app/shelf-management/page"));
+const ShelfManagementDetailPage = lazy(() => import("@/app/shelf-management/[id]/page"));
+const OrgShelfStockPage = lazy(() => import("@/app/shelf-stock/page"));
+
 import { useAuthStore } from "@/lib/stores/authStore";
 import { useUserStore } from "@/lib/stores/userStore"; 
-import LoginPage from "./app/login/page";
-import UsersPage from "./app/users/page";
-import { ProtectedRoute } from "./components/auth/ProtectedRoute"; // Import new ProtectedRoute
-import DeviceManagementPage from "@/app/device-management/page"; // AKTUALIZOVANÁ CESTA
-// import ShelvesPage from "./app/shelves/page"; // Stará stránka, nahrazena
-// import ShelfDetailPage from "./app/shelves/[id]/page"; // Stará stránka detailu, již nepoužita
-import AdminShelfManagementPage from "@/app/shelf-management/page"; // NOVÁ STRÁNKA
-import ShelfManagementDetailPage from "@/app/shelf-management/[id]/page"; // NOVÁ STRÁNKA DETAILU
-import OrgShelfStockPage from "@/app/shelf-stock/page"; // NOVÁ STRÁNKA - OPRAVENA CESTA
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 
 
 export default function App() {
@@ -41,7 +40,8 @@ export default function App() {
 
   return (
     <Router>
-      <Routes>
+      <Suspense fallback={<div className="flex items-center justify-center h-screen text-xl font-semibold">Načítání stránky...</div>}>
+        <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route
           path="/"
@@ -164,7 +164,8 @@ export default function App() {
             </Layout>
           }
         />
-      </Routes>
+        </Routes>
+      </Suspense>
     </Router>
   );
 }
