@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { useUserStore } from "@/lib/stores/userStore";
-import { listGatewayDevices, GatewayDevice } from "@/api/adminApi";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Pagination } from "@/components/ui/pagination";
-import { Input } from "@/components/ui/input";
+import { useUserStore } from "@/lib/stores/userStore.ts";
+import { listGatewayDevices, GatewayDevice } from "@/api/adminApi.ts";
+import { Button } from "@/components/ui/button.tsx";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs.tsx";
+import { Pagination } from "@/components/ui/pagination.tsx";
+import { Input } from "@/components/ui/input.tsx";
 import { toast } from "sonner";
 import { Search, RefreshCw, Battery, Signal } from "lucide-react";
-import AddGatewayDeviceDialog from "./AddGatewayDeviceDialog";
-
-import GatewayDeviceDetails from "./GatewayDeviceDetails";
+import AddGatewayDeviceDialog from "@/components/devices/AddGatewayDeviceDialog.tsx";
+import GatewayDeviceDetails from "@/components/devices/GatewayDeviceDetails.tsx";
+import { ShelfDevicesTable } from "@/components/devices/ShelfDevicesTable";
 
 const DeviceManagementPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("gateways");
@@ -35,7 +35,7 @@ const DeviceManagementPage: React.FC = () => {
       setCurrentPage(page);
     } catch (error) {
       console.error("Failed to load gateway devices:", error);
-      toast.error("Failed to load devices. Please try again.");
+      toast.error("Nepodařilo se načíst zařízení. Zkuste to prosím znovu.");
     } finally {
       setIsLoading(false);
     }
@@ -62,15 +62,15 @@ const DeviceManagementPage: React.FC = () => {
 
   const handleAddDeviceSuccess = () => {
     loadGatewayDevices(currentPage, searchTerm);
-    toast.success("Device added successfully!");
+    toast.success("Zařízení bylo úspěšně přidáno!");
   };
 
   if (!isAdmin) {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>Access Denied</CardTitle>
-          <CardDescription>You don't have permission to manage devices.</CardDescription>
+          <CardTitle>Přístup odepřen</CardTitle>
+          <CardDescription>Nemáte oprávnění spravovat zařízení.</CardDescription>
         </CardHeader>
       </Card>
     );
@@ -84,7 +84,7 @@ const DeviceManagementPage: React.FC = () => {
           onClick={() => setSelectedDevice(null)} 
           className="mb-4"
         >
-          Back to Device List
+          Zpět na seznam zařízení
         </Button>
         <GatewayDeviceDetails 
           device={selectedDevice} 
@@ -99,15 +99,15 @@ const DeviceManagementPage: React.FC = () => {
       <CardHeader>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
-            <CardTitle>Device Management</CardTitle>
-            <CardDescription>Manage gateway devices and view their connected shelf sensors</CardDescription>
+            <CardTitle>Správa zařízení</CardTitle>
+            <CardDescription>Spravujte gateway zařízení a zobrazte jejich připojené snímače poliček</CardDescription>
           </div>
           <div className="flex flex-wrap gap-2">
             <AddGatewayDeviceDialog onSuccess={handleAddDeviceSuccess} />
             
             <Button variant="outline" onClick={handleRefresh}>
               <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
+              Obnovit
             </Button>
           </div>
         </div>
@@ -115,32 +115,33 @@ const DeviceManagementPage: React.FC = () => {
       <CardContent>
         <Tabs value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="mb-6">
-            <TabsTrigger value="gateways">Gateway Devices</TabsTrigger>
+            <TabsTrigger value="gateways">Gateway zařízení</TabsTrigger>
+            <TabsTrigger value="shelf-devices">Shelf-devices</TabsTrigger>
           </TabsList>
           
           <TabsContent value="gateways">
             <form onSubmit={handleSearch} className="flex gap-2 mb-4">
               <Input
-                placeholder="Search by serial number..."
+                placeholder="Hledat podle sériového čísla..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
               />
               <Button type="submit" variant="secondary">
                 <Search className="h-4 w-4 mr-2" />
-                Search
+                Hledat
               </Button>
             </form>
             
             {isLoading ? (
-              <div className="flex justify-center p-8">Loading devices...</div>
+              <div className="flex justify-center p-8">Načítání zařízení...</div>
             ) : gatewayDevices.length === 0 ? (
               <div className="text-center p-8 border rounded-lg">
-                <p className="text-muted-foreground">No gateway devices found</p>
+                <p className="text-muted-foreground">Nebylo nalezeno žádné gateway zařízení</p>
                 <AddGatewayDeviceDialog 
                   onSuccess={handleAddDeviceSuccess}
                   className="mt-4"
-                  buttonText="Register First Gateway"
+                  buttonText="Registrovat první gateway"
                 />
               </div>
             ) : (
@@ -160,12 +161,12 @@ const DeviceManagementPage: React.FC = () => {
                         <div className="flex items-center gap-2 text-sm mb-2">
                           <Signal className="h-4 w-4 text-muted-foreground" />
                           {device.last_connected 
-                            ? `Last connected: ${new Date(device.last_connected).toLocaleString()}` 
-                            : "Never connected"}
+                            ? `Naposledy připojeno: ${new Date(device.last_connected).toLocaleString()}` 
+                            : "Nikdy nepřipojeno"}
                         </div>
                         <div className="flex items-center gap-2 text-sm">
                           <Battery className="h-4 w-4 text-muted-foreground" />
-                          {(device.shelf_positions_devices?.length || 0)} connected shelf devices
+                          {(device.shelf_positions_devices?.length || 0)} připojených zařízení poliček
                         </div>
                       </CardContent>
                     </Card>
@@ -184,6 +185,9 @@ const DeviceManagementPage: React.FC = () => {
             )}
           </TabsContent>
           
+          <TabsContent value="shelf-devices">
+            <ShelfDevicesTable />
+          </TabsContent>
           
         </Tabs>
       </CardContent>

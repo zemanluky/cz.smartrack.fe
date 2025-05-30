@@ -54,22 +54,22 @@ const LoginPage = () => {
                 setSelectedOrganizationId(String(user.organization.id));
                 navigate("/dashboard");
               } else {
-                setError("Organization ID missing for org_admin.");
+                setError("Chybí ID organizace pro správce organizace.");
               }
             } else {
-              setError("Unknown user role.");
+              setError("Neznámá role uživatele.");
             }
           } else {
-            setError("Failed to retrieve user details after login.");
+            setError("Nepodařilo se načíst údaje o uživateli po přihlášení.");
           }
         } else {
-          setError("Failed to fetch user details.");
+          setError("Nepodařilo se načíst údaje o uživateli.");
         }
       } else {
-        setError("Invalid credentials.");
+        setError("Neplatné přihlašovací údaje.");
       }
     } catch (err) {
-      setError("Something went wrong. Please try again.");
+      setError("Něco se pokazilo. Zkuste to prosím znovu.");
       console.error(err);
     }
   };
@@ -85,20 +85,20 @@ const LoginPage = () => {
             {error && <div className="text-sm text-red-600">{error}</div>}
             <Input
               type="email"
-              placeholder="Email"
+              placeholder="E-mail"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
             <Input
               type="password"
-              placeholder="Password"
+              placeholder="Heslo"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
             <Button type="submit" className="w-full">
-              Log In
+              Přihlásit se
             </Button>
           </form>
         </CardContent>

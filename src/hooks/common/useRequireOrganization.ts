@@ -27,7 +27,7 @@ export function useRequireOrganization({ includeOrgAdmin = false }: { includeOrg
       if (!selectedOrganizationId) {
         // Only navigate if not already on the target page and action hasn't been taken yet
         if (location.pathname !== '/organizations' && !hasShownToastAndNavigated.current) {
-          toast.info('Please select an organization to continue.');
+          toast.info('Vyberte prosím organizaci pro pokračování.');
           navigate('/organizations');
           hasShownToastAndNavigated.current = true; // Mark that action has been taken
         }

@@ -25,10 +25,10 @@ import { PlusCircle } from "lucide-react";
 import { createGatewayDevice } from "@/api/adminApi";
 import { toast } from "sonner";
 
-// Define the form schema
+// Definice schématu formuláře
 const gatewayDeviceSchema = z.object({
-  serial_number: z.string().min(1, "Serial number is required"),
-  device_secret: z.string().min(32, "Secret must be at least 32 characters"),
+  serial_number: z.string().min(1, "Sériové číslo je povinné"),
+  device_secret: z.string().min(32, "Tajný klíč musí mít alespoň 32 znaků"),
 });
 
 type GatewayDeviceFormValues = z.infer<typeof gatewayDeviceSchema>;
@@ -42,7 +42,7 @@ interface AddGatewayDeviceDialogProps {
 const AddGatewayDeviceDialog: React.FC<AddGatewayDeviceDialogProps> = ({
   onSuccess,
   className = "",
-  buttonText = "Add Gateway Device",
+  buttonText = "Přidat Gateway zařízení",
 }) => {
   const [open, setOpen] = React.useState(false);
 
@@ -61,13 +61,13 @@ const AddGatewayDeviceDialog: React.FC<AddGatewayDeviceDialogProps> = ({
         device_secret: values.device_secret,
       });
       
-      toast.success("Gateway device created successfully");
+      toast.success("Gateway zařízení bylo úspěšně vytvořeno");
       form.reset();
       setOpen(false);
       onSuccess?.();
     } catch (error: any) {
       console.error("Error creating gateway device:", error);
-      toast.error(error.message || "Failed to create gateway device");
+      toast.error(error.message || "Nepodařilo se vytvořit gateway zařízení");
     }
   };
 
@@ -81,9 +81,9 @@ const AddGatewayDeviceDialog: React.FC<AddGatewayDeviceDialogProps> = ({
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add Gateway Device</DialogTitle>
+          <DialogTitle>Přidat Gateway zařízení</DialogTitle>
           <DialogDescription>
-            Register a new gateway device to manage shelf sensors
+            Zaregistrujte nové gateway zařízení pro správu senzorů regálů
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -93,9 +93,9 @@ const AddGatewayDeviceDialog: React.FC<AddGatewayDeviceDialogProps> = ({
               name="serial_number"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Serial Number</FormLabel>
+                  <FormLabel>Sériové číslo</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter device serial number" {...field} />
+                    <Input placeholder="Zadejte sériové číslo zařízení" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -106,11 +106,11 @@ const AddGatewayDeviceDialog: React.FC<AddGatewayDeviceDialogProps> = ({
               name="device_secret"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Device Secret</FormLabel>
+                  <FormLabel>Tajný klíč zařízení</FormLabel>
                   <FormControl>
                     <Input 
                       type="password" 
-                      placeholder="Enter device secret" 
+                      placeholder="Zadejte tajný klíč zařízení" 
                       {...field} 
                     />
                   </FormControl>
@@ -123,7 +123,7 @@ const AddGatewayDeviceDialog: React.FC<AddGatewayDeviceDialogProps> = ({
                 type="submit" 
                 disabled={form.formState.isSubmitting}
               >
-                {form.formState.isSubmitting ? "Creating..." : "Create Gateway Device"}
+                {form.formState.isSubmitting ? "Vytváření..." : "Vytvořit Gateway zařízení"}
               </Button>
             </DialogFooter>
           </form>

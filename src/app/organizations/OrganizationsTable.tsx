@@ -44,10 +44,10 @@ import { Pagination } from "@/components/ui/pagination"; // Use the project's cu
 interface OrganizationCardItemProps {
   organization: Organization;
   onViewDashboard: (organization: Organization) => void;
-  onDelete: (organization: Organization) => void;
+  onSmazat: (organization: Organization) => void;
 }
 
-const OrganizationCardItem = ({ organization, onViewDashboard, onDelete }: OrganizationCardItemProps) => {
+const OrganizationCardItem = ({ organization, onViewDashboard, onSmazat }: OrganizationCardItemProps) => {
   return (
     <Card>
       <CardHeader>
@@ -57,15 +57,15 @@ const OrganizationCardItem = ({ organization, onViewDashboard, onDelete }: Organ
       <CardContent>
         <p className="text-sm text-muted-foreground break-words">ID: {organization.id}</p>
         <p className={`text-sm font-medium break-words ${organization.active ? 'text-green-600' : 'text-red-600'}`}>
-          Status: {organization.active ? "Active" : "Inactive"}
+          Stav: {organization.active ? "Aktivní" : "Neaktivní"}
         </p>
       </CardContent>
       <CardFooter className="flex flex-col space-y-2 pt-4 sm:flex-row sm:space-y-0 sm:justify-end sm:space-x-2 sm:items-center">
         <Button variant="outline" size="sm" className="w-full sm:w-auto" onClick={() => onViewDashboard(organization)}>
-          View Dashboard
+          Zobrazit přehled
         </Button>
-        <Button variant="destructive" size="sm" className="w-full sm:w-auto" onClick={() => onDelete(organization)}>
-          Delete
+        <Button variant="destructive" size="sm" className="w-full sm:w-auto" onClick={() => onSmazat(organization)}>
+          Smazat
         </Button>
       </CardFooter>
     </Card>
@@ -91,7 +91,7 @@ export function OrganizationsTable() {
     setOrganizations();
   }, []);
 
-  const confirmDelete = () => {
+  const confirmSmazat = () => {
     if (selectedOrgId !== null) {
       removeOrganization(selectedOrgId);
       setDialogOpen(false);
@@ -107,17 +107,17 @@ export function OrganizationsTable() {
     },
     {
       accessorKey: "name",
-      header: "Name",
+      header: "Jméno Oraganizace",
       cell: (info) => info.getValue(),
     },
     {
       accessorKey: "active",
-      header: "Active",
+      header: "Stav",
       cell: (info) => (info.getValue() ? "✅" : "❌"),
     },
     {
       id: "actions",
-      header: "Actions",
+      header: "Možnosti",
       cell: ({ row }) => (
         <div className="space-x-2">
           <Button
@@ -125,11 +125,11 @@ export function OrganizationsTable() {
             size="sm"
             onClick={() => {
               setSelectedOrganizationId(String(row.original.id));
-              toast.info("Switched to organization: " + row.original.name);
+              toast.info("Přepnuto na organizaci: " + row.original.name);
               navigate("/dashboard");
             }}
           >
-            View Dashboard
+            Zobrazit přehled
           </Button>
           <Button
             variant="destructive"
@@ -139,7 +139,7 @@ export function OrganizationsTable() {
               setDialogOpen(true);
             }}
           >
-            Delete
+            Smazat
           </Button>
         </div>
       ),
@@ -206,7 +206,7 @@ export function OrganizationsTable() {
                   colSpan={columns.length}
                   className="text-center h-24"
                 >
-                  No organizations found.
+                  Nebyly nalezeny žádné organizace.
                 </TableCell>
               </TableRow>
             )}
@@ -223,18 +223,18 @@ export function OrganizationsTable() {
               organization={row.original}
               onViewDashboard={(organizationToView) => {
                 setSelectedOrganizationId(String(organizationToView.id));
-                toast.info("Switched to organization: " + organizationToView.name);
+                toast.info("Přepnuto na organizaci: " + organizationToView.name);
                 navigate("/dashboard");
               }}
-              onDelete={(organizationToDelete) => {
-                setSelectedOrgId(organizationToDelete.id);
+              onSmazat={(organizationToSmazat) => {
+                setSelectedOrgId(organizationToSmazat.id);
                 setDialogOpen(true);
               }}
             />
           ))
         ) : (
           <div className="text-center text-muted-foreground p-4 border rounded-md">
-            No organizations found.
+            Nebyly nalezeny žádné organizace.
           </div>
         )}
       </div>
@@ -252,15 +252,15 @@ export function OrganizationsTable() {
       <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>Opravdu si přejete pokračovat?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete the organization.
+              Tímto trvale odstraníte organizaci.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete}>
-              Delete
+            <AlertDialogAction onClick={confirmSmazat}>
+              Smazat
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

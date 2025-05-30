@@ -53,5 +53,15 @@ export async function updateProductApi(id: number, payload: ProductCreate): Prom
   return data;
 }
 
-
-
+// Get product by ID
+export async function getProductById(id: number): Promise<Product> {
+  try {
+    const { data } = await api.get(`/product/${id}`);
+    return data;
+  } catch (err: any) {
+    if (err.response && typeof err.response.data === 'string' && (err.response.data.startsWith('<!doctype') || err.response.data.startsWith('<html'))) {
+      throw new Error('API returned HTML instead of JSON. Check your backend URL and authentication.');
+    }
+    throw new Error(err.message || `Failed to fetch product with ID ${id}`);
+  }
+}
