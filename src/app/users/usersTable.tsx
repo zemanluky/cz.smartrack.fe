@@ -210,6 +210,7 @@ export function UsersTable() {
           {(currentUser?.role === "sys_admin" ||
             currentUser?.role === "org_admin") && (
             <Button
+              className={`${selectedOrganizationId ? "" : "hidden"}`}
               variant="outline"
               size="sm"
               onClick={() => onEditUser(row.original)}
@@ -233,9 +234,10 @@ export function UsersTable() {
       {/* Container for title and button, changed from flex to block stacking */}
       <div>
         <h2 className="text-lg font-semibold mb-4">
-          {" "}
           {/* Added mb-4 for spacing */}
-          Users of{" "}
+          {currentUser?.role === "sys_admin"
+            ? "Selected organization "
+            : "Users of"}
           {
             organizations.find((o) => String(o.id) === selectedOrganizationId)
               ?.name
@@ -244,9 +246,11 @@ export function UsersTable() {
 
         {(currentUser?.role === "sys_admin" ||
           currentUser?.role === "org_admin") && (
-          <div className="flex items-center gap-4 mb-4 justify-between">
+          <div className={"flex items-center gap-4 mb-4 justify-between"}>
             <Button
-              className="w-full sm:w-auto flex items-center gap-2"
+              className={`w-full sm:w-auto flex items-center gap-2 ${
+                selectedOrganizationId ? "" : "hidden"
+              }`}
               onClick={() => setIsAddOpen(true)}
             >
               <Plus className="h-4 w-4" />

@@ -183,6 +183,7 @@ export function UserFormDialog({
                     </FormItem>
                   )}
                 />
+
                 <FormField
                   control={form.control}
                   name="active"

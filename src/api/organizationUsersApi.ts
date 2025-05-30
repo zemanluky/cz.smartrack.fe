@@ -1,5 +1,6 @@
 import api from "./api";
 import { useOrganizationStore } from "@/lib/stores/organizationsStore";
+import { useOrganizationUsersStore } from "@/lib/stores/organizationUsersStore";
 import { useUserStore } from "@/lib/stores/userStore";
 
 interface Organization {
