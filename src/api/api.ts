@@ -4,7 +4,7 @@ import { useUserStore } from "../lib/stores/userStore";
 import { useOrganizationStore } from "../lib/stores/organizationsStore";
 
 const api = axios.create({
-  baseURL: "https://api.smartrack.zeluk.dev",
+  baseURL: "https://api.smartrack.zeluk.net",
 });
 
 api.interceptors.request.use((config) => {
