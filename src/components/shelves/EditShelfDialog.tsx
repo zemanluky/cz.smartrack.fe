@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -25,6 +25,16 @@ import { useShelvesStore } from "@/lib/stores/shelvesStore";
 import { useUserStore } from "@/lib/stores/userStore";
 import { useOrganizationStore } from "@/lib/stores/organizationsStore";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -32,7 +42,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import type { Shelf } from "@/lib/types/shelf";
+import type { Shelf, ShelfDetail, ShelfPosition } from "@/lib/types/shelf";
 
 // Schema pro validaci formuláře
 const shelfFormSchema = z.object({
@@ -57,6 +67,11 @@ export const EditShelfDialog: React.FC<EditShelfDialogProps> = ({
   const { updateShelf } = useShelvesStore();
   const { organizations } = useOrganizationStore();
   const currentUser = useUserStore((state) => state.currentUser);
+  
+  // Stav pro kontrolu změny organizace
+  const [showOrgChangeAlert, setShowOrgChangeAlert] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<ShelfFormValues | null>(null);
+  const [hasProducts, setHasProducts] = useState(false);
 
   const form = useForm<ShelfFormValues>({
     resolver: zodResolver(shelfFormSchema),
@@ -78,12 +93,16 @@ export const EditShelfDialog: React.FC<EditShelfDialogProps> = ({
     }
   }, [shelf, form]);
 
-  const onSubmit = async (data: ShelfFormValues) => {
-    if (!shelf) {
-      toast.error("Nelze upravit regál, protože nebyl nalezen");
-      return;
-    }
+  // Pomocná funkce pro kontrolu, zda regál obsahuje nějaké produkty
+  const checkShelfForProducts = (shelf: ShelfDetail): boolean => {
+    // Zkontrolujeme, zda některá pozice obsahuje produkt
+    return shelf.shelf_positions.some((position: ShelfPosition) => position.product !== null);
+  };
 
+  // Funkce pro zpracování změny organizace po potvrzení
+  const handleConfirmedSubmit = async (data: ShelfFormValues) => {
+    if (!shelf) return;
+    
     try {
       // Transformace prázdného řetězce na null pro shelf_store_location
       const formattedData = {
@@ -93,14 +112,52 @@ export const EditShelfDialog: React.FC<EditShelfDialogProps> = ({
 
       await updateShelf(shelf.id, formattedData);
       onOpenChange(false);
+      toast.success("Regál byl úspěšně upraven");
+      
+      // Reset stavů
+      setPendingFormData(null);
+      setShowOrgChangeAlert(false);
+      setHasProducts(false);
     } catch (error: any) {
+      console.error('Chyba při úpravě regálu:', error);
       toast.error(error.message || "Nepodařilo se upravit regál");
     }
   };
 
+  const onSubmit = async (data: ShelfFormValues) => {
+    if (!shelf) {
+      toast.error("Nelze upravit regál, protože nebyl nalezen");
+      return;
+    }
+
+    try {
+      // Kontrola změny organizace, pokud se mění organizace
+      if (data.organization_id !== shelf.organization?.id) {
+        // Získání aktuálního detailu regálu (s pozicemi)
+        const shelfDetail = await useShelvesStore.getState().fetchShelfById(shelf.id);
+        
+        // Pokud se podařilo načíst detail a regál obsahuje produkty, zobrazíme varování
+        if (shelfDetail && checkShelfForProducts(shelfDetail)) {
+          // Uložíme data formuláře pro pozdější použití
+          setPendingFormData(data);
+          setHasProducts(true);
+          setShowOrgChangeAlert(true);
+          return; // Čekáme na potvrzení
+        }
+      }
+
+      // Pokud nejsou produkty nebo se nemění organizace, pokračujeme přímo
+      await handleConfirmedSubmit(data);
+    } catch (error: any) {
+      console.error('Chyba při kontrole regálu:', error);
+      toast.error(error.message || "Nepodařilo se ověřit stav regálu");
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Upravit regál</DialogTitle>
           <DialogDescription>
@@ -178,8 +235,37 @@ export const EditShelfDialog: React.FC<EditShelfDialogProps> = ({
               <Button type="submit">Uložit</Button>
             </DialogFooter>
           </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
+          </Form>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Alert Dialog pro potvrzení změny organizace */}
+      <AlertDialog open={showOrgChangeAlert} onOpenChange={setShowOrgChangeAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Pozor: Změna organizace regálu</AlertDialogTitle>
+            <AlertDialogDescription>
+              <p>Tento regál obsahuje zaskladněné produkty. Změna organizace může způsobit nekonzistenci dat mezi regálem a produkty.</p>
+              <p className="mt-2 font-medium text-red-600">
+                Upozornění: Produkty z původní organizace zůstanou na pozicích! To může způsobit problémy při následné práci s regálem.
+              </p>
+              <p className="mt-2">Opravdu chcete změnit organizaci regálu?</p>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => {
+              setShowOrgChangeAlert(false);
+              setPendingFormData(null);
+            }}>Zrušit</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={() => pendingFormData && handleConfirmedSubmit(pendingFormData)} 
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              Ano, změnit organizaci
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };

@@ -58,7 +58,7 @@ const ProductsPage = (): JSX.Element => {
       ) : (
         <ProductTable
           products={products}
-          onDelete={async (id) => {
+          onSmazat={async (id: number) => {
             setLoading(true);
             setError(null);
             try {
@@ -71,7 +71,7 @@ const ProductsPage = (): JSX.Element => {
               setLoading(false);
             }
           }}
-          onEdit={async () => {
+          onUpravit={async () => {
             setLoading(true);
             setError(null);
             try {

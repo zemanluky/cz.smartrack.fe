@@ -17,27 +17,27 @@ const OrganizationDashboardPage = () => {
     }
   }, [organizations.length, setOrganizations]);
 
-  if (!currentUser) return <div>Loading user...</div>;
-  if (loadingOrRedirecting) return <div>Loading or redirecting...</div>;
+  if (!currentUser) return <div>Načítání uživatele...</div>;
+  if (loadingOrRedirecting) return <div>Načítání nebo přesměrování...</div>;
 
   const selectedOrg = organizations.find(o => String(o.id) === selectedOrganizationId);
 
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold tracking-tight">
-        {selectedOrg ? selectedOrg.name : "Organization Dashboard"}
+        {selectedOrg ? selectedOrg.name : "Přehled organizace"}
       </h1>
       <div className="mt-4 space-y-2">
-        <p>Welcome, {currentUser.name} ({currentUser.role})!</p>
+        <p>Vítejte, {currentUser.name} ({currentUser.role})!</p>
         {selectedOrganizationId ? (
-          <p>Displaying data for Organization: <strong>{selectedOrg ? selectedOrg.name : selectedOrganizationId}</strong></p>
+          <p>Zobrazují se data pro organizaci: <strong>{selectedOrg ? selectedOrg.name : selectedOrganizationId}</strong></p>
         ) : (
-          <p>No organization selected.</p>
+          <p>Není vybrána žádná organizace.</p>
         )}
         {/* Placeholder for actual dashboard content based on selectedOrganizationId */}
         <div className="mt-6 p-4 border rounded-md bg-gray-50">
-          <p className="text-lg font-semibold">Organization Specific Content Area</p>
-          <p>Data related to organization {selectedOrg ? selectedOrg.name : selectedOrganizationId} will be shown here.</p>
+          <p className="text-lg font-semibold">Oblast specifická pro organizaci</p>
+          <p>Data týkající se organizace {selectedOrg ? selectedOrg.name : selectedOrganizationId} budou zobrazena zde.</p>
         </div>
       </div>
     </div>

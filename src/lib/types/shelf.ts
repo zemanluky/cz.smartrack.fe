@@ -61,6 +61,18 @@ export interface ShelfDetail extends Shelf {
 export interface ShelfPositionCreate {
   row: number;
   column: number;
+  product_id?: number | null;
+  low_stock_threshold_percent?: number;
+  max_current_product_capacity?: number | null;
+}
+
+/**
+ * Payload for updating a shelf position
+ * Based on cz.smartrack.be/src/model/shelf-position.model.ts
+ */
+export interface ShelfPositionUpdate {
+  row: number;
+  column: number;
   product_id: number | null;
   low_stock_threshold_percent: number;
   max_current_product_capacity: number | null;

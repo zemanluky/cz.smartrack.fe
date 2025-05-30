@@ -1,4 +1,4 @@
-import type { Shelf, ShelfCreate, ShelfDetail, PaginatedResponse, ShelfPosition, ShelfPositionCreate } from "@/lib/types/shelf";
+import type { Shelf, ShelfCreate, ShelfDetail, PaginatedResponse, ShelfPosition, ShelfPositionCreate, ShelfPositionUpdate } from "@/lib/types/shelf";
 import api from "./api";
 import { AxiosError } from 'axios';
 
@@ -141,5 +141,66 @@ export async function createShelfPositionApi(
         errorMessage = err.message;
     }
     throw new Error(errorMessage);
+  }
+}
+
+/**
+ * Update all information about a shelf position (admin only)
+ * This is different from assignProductToPosition which only updates product-related fields
+ */
+export async function updateShelfPositionApi(
+  shelfId: number,
+  positionIdOrTag: number | string,
+  payload: ShelfPositionUpdate
+): Promise<ShelfPosition | undefined> {
+  try {
+    console.log(`[updateShelfPositionApi] Updating position ${positionIdOrTag} on shelf ${shelfId} with:`, payload);
+    const { data } = await api.patch(`/shelf/${shelfId}/shelf-position/${positionIdOrTag}`, payload);
+    return data;
+  } catch (err: any) {
+    console.error(`Failed to update shelf position ${positionIdOrTag} for shelf ID ${shelfId}:`, err);
+    let errorMessage = `Nepodařilo se upravit pozici na regálu.`;
+    
+    if (err.response) {
+      console.error("Response data:", err.response.data);
+      console.error("Response status:", err.response.status);
+      
+      if (err.response.data && typeof err.response.data.message === 'string') {
+        errorMessage = err.response.data.message;
+      } else if (err.response.data && typeof err.response.data.error === 'string') {
+        errorMessage = err.response.data.error;
+      }
+    }
+    
+    throw new Error(errorMessage || err.message);
+  }
+}
+
+/**
+ * Delete a shelf position (admin only)
+ */
+export async function deleteShelfPositionApi(
+  shelfId: number,
+  positionIdOrTag: number | string
+): Promise<void> {
+  try {
+    console.log(`[deleteShelfPositionApi] Deleting position ${positionIdOrTag} from shelf ${shelfId}`);
+    await api.delete(`/shelf/${shelfId}/shelf-position/${positionIdOrTag}`);
+  } catch (err: any) {
+    console.error(`Failed to delete shelf position ${positionIdOrTag} from shelf ID ${shelfId}:`, err);
+    let errorMessage = `Nepodařilo se odstranit pozici z regálu.`;
+    
+    if (err.response) {
+      console.error("Response data:", err.response.data);
+      console.error("Response status:", err.response.status);
+      
+      if (err.response.data && typeof err.response.data.message === 'string') {
+        errorMessage = err.response.data.message;
+      } else if (err.response.data && typeof err.response.data.error === 'string') {
+        errorMessage = err.response.data.error;
+      }
+    }
+    
+    throw new Error(errorMessage || err.message);
   }
 }

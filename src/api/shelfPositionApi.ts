@@ -73,14 +73,23 @@ export async function deleteShelfPosition(
 
 /**
  * Assign product to a shelf position
+ * @param shelfId ID regálu
+ * @param positionIdOrTag ID nebo tag pozice
+ * @param payload Data produktu k přiřazení
+ * @param options Další možnosti (např. display_code pro E-ink displej)
  */
 export async function assignProductToShelfPosition(
   shelfId: number, 
   positionIdOrTag: number | string, 
-  payload: ShelfPositionProductAssign
+  payload: ShelfPositionProductAssign,
+  options?: { params?: { display_code?: string } }
 ): Promise<ShelfPositionDetail> {
   try {
-    const { data } = await api.patch(`/shelf/${shelfId}/shelf-position/${positionIdOrTag}/product`, payload);
+    const { data } = await api.patch(
+      `/shelf/${shelfId}/shelf-position/${positionIdOrTag}/product`, 
+      payload,
+      options
+    );
     return data;
   } catch (err: any) {
     console.error("Failed to assign product to shelf position:", err);

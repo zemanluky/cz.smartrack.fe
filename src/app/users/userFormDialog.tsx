@@ -10,7 +10,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
   DialogDescription,
 } from "@/components/ui/dialog";
 import {
@@ -33,10 +32,10 @@ import { useUserStore } from "@/lib/stores/userStore";
 export const userFormSchema = z.object({
   name: z
     .string()
-    .min(2, "Name must be at least 2 characters")
-    .max(32, "Name must be 32 characters or fewer"),
-  email: z.string().email("Invalid email address"),
-  role: z.string().min(2, "Role must be at least 2 characters"),
+    .min(2, "Jméno musí obsahovat alespoň 2 znaky")
+    .max(32, "Jméno nesmí přesáhnout 32 znaků"),
+  email: z.string().email("Neplatná e-mailová adresa"),
+  role: z.string().min(2, "Role musí obsahovat alespoň 2 znaky"),
   active: z.boolean(),
 });
 
@@ -87,12 +86,12 @@ export function UserFormDialog({
     setIsSubmitting(true);
     try {
       await onSubmit(data);
-      toast.success(isEditMode ? "User updated" : "User added");
+      toast.success(isEditMode ? "Uživatel byl upraven" : "Uživatel byl přidán");
       form.reset();
       onOpenChange(false);
     } catch (error) {
       console.error(error);
-      toast.error(isEditMode ? "Failed to update user" : "Failed to add user");
+      toast.error(isEditMode ? "Nepodařilo se upravit uživatele" : "Nepodařilo se přidat uživatele");
     } finally {
       setIsSubmitting(false);
     }
@@ -102,11 +101,11 @@ export function UserFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>{isEditMode ? "Edit User" : "Add New User"}</DialogTitle>
+          <DialogTitle>{isEditMode ? "Upravit uživatele" : "Přidat nového uživatele"}</DialogTitle>
           <DialogDescription>
             {isEditMode
-              ? "Modify the user's information below."
-              : "Fill out the form to add a new user."}
+              ? "Upravte údaje uživatele níže."
+              : "Vyplníte formulář pro přidání nového uživatele."}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -119,9 +118,9 @@ export function UserFormDialog({
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>Jméno</FormLabel>
                   <FormControl>
-                    <Input placeholder="User name" {...field} />
+                    <Input placeholder="Jméno uživatele" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -132,9 +131,9 @@ export function UserFormDialog({
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>E-mail</FormLabel>
                   <FormControl>
-                    <Input placeholder="User email" {...field} />
+                    <Input placeholder="E-mail uživatele" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -154,25 +153,25 @@ export function UserFormDialog({
                           onValueChange={field.onChange}
                         >
                           <SelectTrigger>
-                            <SelectValue placeholder="Select a role" />
+                            <SelectValue placeholder="Vyberte roli" />
                           </SelectTrigger>
                           <SelectContent>
                             {userRole === "sys_admin" && (
                               <>
-                                <SelectItem value="org_user">User</SelectItem>
+                                <SelectItem value="org_user">Uživatel</SelectItem>
                                 <SelectItem value="org_admin">
-                                  Org admin
+                                  Administrátor organizace
                                 </SelectItem>
                                 <SelectItem value="sys_admin">
-                                  System admin
+                                  Systémový administrátor
                                 </SelectItem>
                               </>
                             )}
                             {userRole === "org_admin" && (
                               <>
-                                <SelectItem value="org_user">User</SelectItem>
+                                <SelectItem value="org_user">Uživatel</SelectItem>
                                 <SelectItem value="org_admin">
-                                  Org admin
+                                  Administrátor organizace
                                 </SelectItem>
                               </>
                             )}
@@ -188,7 +187,7 @@ export function UserFormDialog({
                   name="active"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Status</FormLabel>
+                      <FormLabel>Stav</FormLabel>
                       <Select
                         value={field.value ? "true" : "false"}
                         onValueChange={(val) => field.onChange(val === "true")}
@@ -199,8 +198,8 @@ export function UserFormDialog({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="true">Active</SelectItem>
-                          <SelectItem value="false">Inactive</SelectItem>
+                          <SelectItem value="true">Aktivní</SelectItem>
+                          <SelectItem value="false">Neaktivní</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -212,11 +211,11 @@ export function UserFormDialog({
             <Button type="submit" disabled={isSubmitting}>
               {isSubmitting
                 ? isEditMode
-                  ? "Saving..."
-                  : "Adding..."
+                  ? "Ukládání..."
+                  : "Přidávání..."
                 : isEditMode
-                ? "Save Changes"
-                : "Add User"}
+                ? "Uložit změny"
+                : "Přidat uživatele"}
             </Button>
           </form>
         </Form>

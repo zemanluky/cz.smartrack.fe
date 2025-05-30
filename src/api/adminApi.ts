@@ -1,5 +1,4 @@
 import api from "./api";
-import { AxiosResponse } from "axios";
 
 // Types for the API responses and requests
 export interface GatewayDevice {

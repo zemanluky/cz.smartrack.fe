@@ -3,11 +3,13 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ShelfPositionGrid } from "@/components/shelves/ShelfPositionGrid";
 
 import { useShelvesStore } from "@/lib/stores/shelvesStore";
 import { EditShelfDialog } from "@/components/shelves/EditShelfDialog";
 import { DeleteShelfDialog } from "@/components/shelves/DeleteShelfDialog";
-import { ArrowLeftIcon, PencilIcon, TrashIcon } from "lucide-react";
+import { AddShelfPositionDialog } from "@/components/shelves/AddShelfPositionDialog";
+import { ArrowLeftIcon, PencilIcon, TrashIcon, PlusIcon } from "lucide-react";
 import { useUserStore } from "@/lib/stores/userStore";
 import type { Shelf } from "@/lib/types/shelf";
 
@@ -18,6 +20,7 @@ export default function ShelfManagementDetailPage() {
   const currentUser = useUserStore((state) => state.currentUser);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [addPositionDialogOpen, setAddPositionDialogOpen] = useState(false);
 
   // Kontrola oprávnění - tato stránka je pouze pro sys_admin
   useEffect(() => {
@@ -48,6 +51,8 @@ export default function ShelfManagementDetailPage() {
   const handleBack = () => {
     navigate("/shelf-management"); // Aktualizovaná cesta zpět na správu regálů
   };
+  
+  // Použije univerzalní komponentu pro zobrazení mřížky regálu
 
   return (
     <div className="container py-6">
@@ -104,7 +109,10 @@ export default function ShelfManagementDetailPage() {
                 <h3 className="text-lg font-semibold mb-2">Pozice</h3>
                 <div className="space-y-2">
                   <p><span className="font-medium">Počet pozic:</span> {selectedShelf.shelf_position_count || 0}</p>
-                  <Button>Přidat pozici</Button>
+                  <Button onClick={() => setAddPositionDialogOpen(true)}>
+                    <PlusIcon className="h-4 w-4 mr-2" />
+                    Přidat pozici
+                  </Button>
                 </div>
               </div>
             </div>
@@ -115,13 +123,16 @@ export default function ShelfManagementDetailPage() {
       <div className="mb-6">
         <h2 className="text-xl font-semibold mb-4">Mřížka pozic regálu</h2>
         {selectedShelf.shelf_positions && selectedShelf.shelf_positions.length > 0 ? (
-          <div className="bg-muted p-8 rounded-lg text-center">
-            <p className="text-muted-foreground">Zobrazení mřížky pozic regálu bude implementováno v další fázi.</p>
+          <div className="bg-background border rounded-lg p-4">
+            <ShelfPositionGrid shelfId={selectedShelf.id} positions={selectedShelf.shelf_positions} />
           </div>
         ) : (
           <div className="bg-muted p-8 rounded-lg text-center">
             <p className="text-muted-foreground">Tento regál zatím nemá žádné pozice.</p>
-            <Button className="mt-4">Přidat první pozici</Button>
+            <Button className="mt-4" onClick={() => setAddPositionDialogOpen(true)}>
+              <PlusIcon className="h-4 w-4 mr-2" />
+              Přidat první pozici
+            </Button>
           </div>
         )}
       </div>
@@ -138,6 +149,14 @@ export default function ShelfManagementDetailPage() {
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
       />
+      
+      {id && (
+        <AddShelfPositionDialog
+          shelfId={Number(id)}
+          open={addPositionDialogOpen}
+          onOpenChange={setAddPositionDialogOpen}
+        />
+      )}
     </div>
   );
 }

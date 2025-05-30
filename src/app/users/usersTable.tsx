@@ -14,16 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useEffect, useState } from "react";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogHeader,
-  AlertDialogFooter,
-  AlertDialogTitle,
-  AlertDialogDescription,
-  AlertDialogCancel,
-  AlertDialogAction,
-} from "@/components/ui/alert-dialog";
+// Nepoužívané AlertDialog komponenty byly odstraněny
 import { Button } from "@/components/ui/button";
 // Input is not used
 import { Pagination } from "@/components/ui/pagination";
@@ -70,7 +61,7 @@ const UserCardItem = ({ user, onEdit, currentUserRole }: UserCardItemProps) => {
         <p className="text-sm text-muted-foreground break-words">{user.email}</p>
         <p className="text-sm text-muted-foreground break-words">Role: {user.role}</p>
         <p className={`text-sm font-medium break-words ${user.active ? 'text-green-600' : 'text-red-600'}`}>
-          Status: {user.active ? "Active" : "Inactive"}
+          Stav: {user.active ? "Aktivní" : "Neaktivní"}
         </p>
       </CardContent>
       <CardFooter className="flex flex-col space-y-2 pt-4 sm:flex-row sm:space-y-0 sm:justify-end sm:space-x-2 sm:items-center">
@@ -81,7 +72,7 @@ const UserCardItem = ({ user, onEdit, currentUserRole }: UserCardItemProps) => {
           onClick={() => onEdit(user)}
           disabled={!canEdit}
         >
-          Edit
+          Upravit
         </Button>
       </CardFooter>
     </Card>
@@ -197,7 +188,7 @@ export function UsersTable() {
     return (
       <div className="flex items-center justify-center h-full">
         <p className="text-muted-foreground">
-          Please select an organization to view users.
+          Vyberte prosím organizaci pro zobrazení uživatelů.
         </p>
       </div>
     );
@@ -208,7 +199,7 @@ export function UsersTable() {
       {/* Container for title and button, changed from flex to block stacking */}
       <div>
         <h2 className="text-lg font-semibold mb-4"> {/* Added mb-4 for spacing */}
-          Users of {organizations.find((o) => String(o.id) === selectedOrganizationId)?.name}
+          Uživatelé organizace {organizations.find((o) => String(o.id) === selectedOrganizationId)?.name}
         </h2>
 
         {(currentUser?.role === "sys_admin" ||
@@ -218,7 +209,7 @@ export function UsersTable() {
             onClick={() => setIsAddOpen(true)}
           >
             <Plus className="h-4 w-4" />
-            Add User
+            Přidat uživatele
           </Button>
         )}
       </div>
@@ -261,7 +252,7 @@ export function UsersTable() {
                   colSpan={columns.length}
                   className="text-center h-24"
                 >
-                  No users found.
+                  Žádní uživatelé nenalezeni.
                 </TableCell>
               </TableRow>
             )}
@@ -281,7 +272,7 @@ export function UsersTable() {
           ))
         ) : (
           <div className="text-center text-muted-foreground p-4 border rounded-md">
-            No users found for the current page.
+            Žádní uživatelé nenalezeni pro aktuální stránku.
           </div>
         )}
       </div>

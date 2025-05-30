@@ -11,18 +11,18 @@ import { InfoIcon } from "lucide-react";
 
 interface ProductTableProps {
   products: Product[];
-  onEdit?: () => void;
-  onDelete?: (id: number) => void;
+  onUpravit?: () => void;
+  onSmazat?: (id: number) => void;
 }
 
 // Define the ProductCardItem component
 interface ProductCardItemProps {
   product: Product;
-  onEdit: () => void; 
-  onDelete: (id: number) => void;
+  onUpravit: () => void; 
+  onSmazat: (id: number) => void;
 }
 
-const ProductCardItem = ({ product, onEdit, onDelete }: ProductCardItemProps) => {
+const ProductCardItem = ({ product, onUpravit, onSmazat }: ProductCardItemProps) => {
   const navigate = useNavigate();
   
   const handleViewDetail = () => {
@@ -49,21 +49,21 @@ const ProductCardItem = ({ product, onEdit, onDelete }: ProductCardItemProps) =>
         </Button>
         <EditProductDialog 
           product={product} 
-          onSuccess={onEdit} 
-          trigger={<Button variant="outline" size="sm" className="w-full sm:w-auto">Edit</Button>} 
+          onSuccess={onUpravit} 
+          trigger={<Button variant="outline" size="sm" className="w-full sm:w-auto">Upravit</Button>} 
         />
         <DeleteProductDialog
           productId={product.id}
           productName={product.name}
-          onSuccess={() => onDelete(product.id)}
-          trigger={<Button variant="destructive" size="sm" className="w-full sm:w-auto">Delete</Button>}
+          onSuccess={() => onSmazat(product.id)}
+          trigger={<Button variant="destructive" size="sm" className="w-full sm:w-auto">Smazat</Button>}
         />
       </CardFooter>
     </Card>
   );
 };
 
-export const ProductTable: React.FC<ProductTableProps> = ({ products, onEdit, onDelete }) => {
+export const ProductTable: React.FC<ProductTableProps> = ({ products, onUpravit, onSmazat }) => {
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -86,9 +86,9 @@ export const ProductTable: React.FC<ProductTableProps> = ({ products, onEdit, on
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="text-left">Name</TableHead>
-            <TableHead className="text-center">Price</TableHead>
-            <TableHead className="text-center">Actions</TableHead>
+            <TableHead className="text-left">Název</TableHead>
+            <TableHead className="text-center">Cena</TableHead>
+            <TableHead className="text-center">Možnosti</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -107,12 +107,12 @@ export const ProductTable: React.FC<ProductTableProps> = ({ products, onEdit, on
                     <InfoIcon className="h-4 w-4 mr-1" />
                     Detail
                   </Button>
-                  <EditProductDialog product={product} onSuccess={() => onEdit && onEdit()} trigger={<Button variant="outline" size="sm" className="mr-2">Edit</Button>} />
-                  <DeleteProductDialog
+                  <EditProductDialog product={product} onSuccess={() => onUpravit && onUpravit()} trigger={<Button variant="outline" size="sm" className="mr-2">Upravit</Button>} />
+                  <DeleteProductDialog 
                     productId={product.id}
                     productName={product.name}
-                    onSuccess={() => onDelete && onDelete(product.id)}
-                    trigger={<Button variant="destructive" size="sm">Delete</Button>}
+                    onSuccess={() => onSmazat && onSmazat(product.id)}
+                    trigger={<Button variant="destructive" size="sm">Smazat</Button>}
                   />
                 </TableCell>
               </TableRow>
@@ -120,7 +120,7 @@ export const ProductTable: React.FC<ProductTableProps> = ({ products, onEdit, on
           ) : (
             <TableRow>
               <TableCell colSpan={3} className="text-center h-24">
-                No products found.
+                Žádné produkty nenalezeny.
               </TableCell>
             </TableRow>
           )}
@@ -135,13 +135,13 @@ export const ProductTable: React.FC<ProductTableProps> = ({ products, onEdit, on
           <ProductCardItem 
             key={product.id} 
             product={product} 
-            onEdit={() => onEdit && onEdit()} 
-            onDelete={() => onDelete && onDelete(product.id)} 
+            onUpravit={() => onUpravit && onUpravit()} 
+            onSmazat={() => onSmazat && onSmazat(product.id)} 
           />
         ))
       ) : (
         <div className="text-center text-muted-foreground p-4 border rounded-md">
-          No products found.
+          Žádné produkty nenalezeny.
         </div>
       )}
     </div>

@@ -6,15 +6,17 @@ import {
   createShelf, 
   updateShelf, 
   deleteShelf,
-  createShelfPositionApi // Opraven název importu
+  createShelfPositionApi,
+  updateShelfPositionApi,
+  deleteShelfPositionApi
 } from "@/api/shelfApi";
 import type {
   Shelf,
   ShelfCreate,
   ShelfDetail,
-  ShelfPosition, // Přidáno
-  ShelfPositionCreate // Přidáno
-  // PaginatedResponse odstraněn - není přímo používán ve store
+  ShelfPosition,
+  ShelfPositionCreate,
+  ShelfPositionUpdate
 } from "@/lib/types/shelf";
 import { toast } from "sonner";
 
@@ -39,7 +41,9 @@ type ShelvesStore = {
   removeShelf: (id: number) => Promise<void>;
   setSelectedShelf: (shelf: ShelfDetail | null) => void;
   setPage: (page: number) => void;
-  addShelfPosition: (shelfId: number, data: ShelfPositionCreate) => Promise<ShelfPosition | undefined>; // Přidáno
+  addShelfPosition: (shelfId: number, data: ShelfPositionCreate) => Promise<ShelfPosition | undefined>;
+  updateShelfPosition: (shelfId: number, positionIdOrTag: number | string, data: ShelfPositionUpdate) => Promise<ShelfPosition | undefined>;
+  deleteShelfPosition: (shelfId: number, positionIdOrTag: number | string) => Promise<void>;
 };
 
 export const useShelvesStore = create<ShelvesStore>()(
@@ -96,6 +100,7 @@ export const useShelvesStore = create<ShelvesStore>()(
       },
 
       addShelf: async (data: ShelfCreate) => {
+        console.log('[shelvesStore.addShelf] Data to be sent to createShelf API:', data);
         try {
           set({ isLoading: true });
           const newShelf = await createShelf(data);
@@ -172,7 +177,7 @@ export const useShelvesStore = create<ShelvesStore>()(
       addShelfPosition: async (shelfId: number, data: ShelfPositionCreate) => {
         try {
           set({ isLoading: true });
-          const newPosition = await createShelfPositionApi(shelfId, data); // Opraveno volání funkce
+          const newPosition = await createShelfPositionApi(shelfId, data);
 
           if (newPosition) {
             set((state) => {
@@ -189,7 +194,7 @@ export const useShelvesStore = create<ShelvesStore>()(
               // Pokud selectedShelf není relevantní, jen nastav isLoading na false
               return { isLoading: false };
             });
-            toast.success("Pozice v regálu byla úspěšně vytvořena.");
+            toast.success("Pozice byla úspěšně přidána.");
             return newPosition;
           }
 
@@ -197,9 +202,79 @@ export const useShelvesStore = create<ShelvesStore>()(
           return undefined;
         } catch (error: any) { // eslint-disable-line @typescript-eslint/no-explicit-any
           console.error(`Chyba při vytváření pozice v regálu ${shelfId}:`, error);
-          toast.error(error.message || "Nepodařilo se vytvořit pozici v regálu.");
+          toast.error(error.message || "Nepodařilo se přidat pozici.");
           set({ isLoading: false });
           return undefined;
+        }
+      },
+
+      updateShelfPosition: async (shelfId: number, positionIdOrTag: number | string, data: ShelfPositionUpdate) => {
+        try {
+          set({ isLoading: true });
+          const updatedPosition = await updateShelfPositionApi(shelfId, positionIdOrTag, data);
+
+          if (updatedPosition) {
+            set((state) => {
+              // Aktualizuj selectedShelf, pokud existuje a shoduje se ID
+              if (state.selectedShelf && state.selectedShelf.id === shelfId) {
+                return {
+                  selectedShelf: {
+                    ...state.selectedShelf,
+                    shelf_positions: state.selectedShelf.shelf_positions.map(pos => 
+                      (pos.id === updatedPosition.id ? updatedPosition : pos)
+                    ),
+                  },
+                  isLoading: false,
+                };
+              }
+              return { isLoading: false };
+            });
+            toast.success("Pozice byla úspěšně upravena.");
+            return updatedPosition;
+          }
+
+          set({ isLoading: false });
+          return undefined;
+        } catch (error: any) {
+          console.error(`Chyba při aktualizaci pozice ${positionIdOrTag} v regálu ${shelfId}:`, error);
+          toast.error(error.message || "Nepodařilo se upravit pozici.");
+          set({ isLoading: false });
+          return undefined;
+        }
+      },
+
+      deleteShelfPosition: async (shelfId: number, positionIdOrTag: number | string) => {
+        try {
+          set({ isLoading: true });
+          await deleteShelfPositionApi(shelfId, positionIdOrTag);
+          
+          set((state) => {
+            // Aktualizuj selectedShelf, pokud existuje a shoduje se ID
+            if (state.selectedShelf && state.selectedShelf.id === shelfId) {
+              return {
+                selectedShelf: {
+                  ...state.selectedShelf,
+                  shelf_positions: state.selectedShelf.shelf_positions.filter(pos => {
+                    // Pokud positionIdOrTag je číslo, porovnáváme s pos.id
+                    if (typeof positionIdOrTag === 'number' || !isNaN(Number(positionIdOrTag))) {
+                      return pos.id !== Number(positionIdOrTag);
+                    }
+                    // Jinak předpokládáme, že jde o tag, který může být v jiném vlastnosti (např. display_code)
+                    // Bezpečná implementace - pokud ID se neshoduje, ponecháme pozici
+                    return true;
+                  }),
+                },
+                isLoading: false,
+              };
+            }
+            return { isLoading: false };
+          });
+          
+          toast.success("Pozice byla úspěšně odstraněna.");
+        } catch (error: any) {
+          console.error(`Chyba při odstraňování pozice ${positionIdOrTag} z regálu ${shelfId}:`, error);
+          toast.error(error.message || "Nepodařilo se odstranit pozici.");
+          set({ isLoading: false });
         }
       },
     }),

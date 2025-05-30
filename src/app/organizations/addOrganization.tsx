@@ -34,8 +34,8 @@ import { useOrganizationStore } from "@/lib/stores/organizationsStore";
 const organizationFormSchema = z.object({
   name: z
     .string()
-    .min(2, "Name must be at least 2 characters")
-    .max(32, "Name must be 32 characters or fewer"),
+    .min(2, "Název musí mít alespoň 2 znaky")
+    .max(32, "Název musí mít maximálně 32 znaků"),
   active: z.boolean(),
 });
 type OrganizationFormValues = z.infer<typeof organizationFormSchema>;
@@ -60,12 +60,12 @@ export function AddOrganization() {
     setIsSubmitting(true);
     try {
       addOrganization(data.name, data.active);
-      toast.success("Organization added successfully");
+      toast.success("Organizace byla úspěšně přidána");
       form.reset();
       setIsOpen(false);
     } catch (error) {
       console.error("Error adding organization:", error);
-      toast.error("Failed to add organization");
+      toast.error("Nepodařilo se přidat organizaci");
     } finally {
       setIsSubmitting(false);
     }
@@ -79,15 +79,14 @@ export function AddOrganization() {
           onClick={() => setIsOpen(true)}
         >
           <Plus className="h-4 w-4" />
-          Add Organization
+          Přidat organizaci
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Add New Organization</DialogTitle>
+          <DialogTitle>Přidat novou organizaci</DialogTitle>
           <DialogDescription>
-            Fill out the form to add a new organization. All fields are
-            required.
+            Vyplňte formulář pro přidání nové organizace. Všechna pole jsou povinná.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -97,9 +96,9 @@ export function AddOrganization() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>Název</FormLabel>
                   <FormControl>
-                    <Input placeholder="Organization name" {...field} />
+                    <Input placeholder="Název organizace" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -110,7 +109,7 @@ export function AddOrganization() {
               name="active"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Status</FormLabel>
+                  <FormLabel>Stav</FormLabel>
                   <Select
                     value={field.value ? "true" : "false"}
                     onValueChange={(value) => field.onChange(value === "true")}
@@ -121,8 +120,8 @@ export function AddOrganization() {
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="true">Active</SelectItem>
-                      <SelectItem value="false">Inactive</SelectItem>
+                      <SelectItem value="true">Aktivní</SelectItem>
+                      <SelectItem value="false">Neaktivní</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -130,7 +129,7 @@ export function AddOrganization() {
               )}
             />
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Adding..." : "Add Organization"}
+              {isSubmitting ? "Přidávání..." : "Add Organization"}
             </Button>
           </form>
         </Form>
