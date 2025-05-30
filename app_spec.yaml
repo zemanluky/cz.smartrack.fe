@@ -1,0 +1,10 @@
+name: smartrack-fe
+static_sites:
+  - name: smartrack-fe
+    github:
+      branch: main
+      deploy_on_push: true
+      repo: zemanluky/cz.smartrack.fe
+    dockerfile_path: Dockerfile
+    output_dir: /app
+    catchall_document: index.html
