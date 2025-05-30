@@ -48,7 +48,7 @@ type ShelvesStore = {
 
 export const useShelvesStore = create<ShelvesStore>()(
   persist(
-    (set, get) => ({
+    (set) => ({
       shelves: [],
       selectedShelf: null,
       isLoading: false,

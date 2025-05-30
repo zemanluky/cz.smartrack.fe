@@ -71,7 +71,6 @@ export const EditShelfDialog: React.FC<EditShelfDialogProps> = ({
   // Stav pro kontrolu změny organizace
   const [showOrgChangeAlert, setShowOrgChangeAlert] = useState(false);
   const [pendingFormData, setPendingFormData] = useState<ShelfFormValues | null>(null);
-  const [hasProducts, setHasProducts] = useState(false);
 
   const form = useForm<ShelfFormValues>({
     resolver: zodResolver(shelfFormSchema),
@@ -113,11 +112,6 @@ export const EditShelfDialog: React.FC<EditShelfDialogProps> = ({
       await updateShelf(shelf.id, formattedData);
       onOpenChange(false);
       toast.success("Regál byl úspěšně upraven");
-      
-      // Reset stavů
-      setPendingFormData(null);
-      setShowOrgChangeAlert(false);
-      setHasProducts(false);
     } catch (error: any) {
       console.error('Chyba při úpravě regálu:', error);
       toast.error(error.message || "Nepodařilo se upravit regál");
@@ -140,8 +134,6 @@ export const EditShelfDialog: React.FC<EditShelfDialogProps> = ({
         if (shelfDetail && checkShelfForProducts(shelfDetail)) {
           // Uložíme data formuláře pro pozdější použití
           setPendingFormData(data);
-          setHasProducts(true);
-          setShowOrgChangeAlert(true);
           return; // Čekáme na potvrzení
         }
       }
